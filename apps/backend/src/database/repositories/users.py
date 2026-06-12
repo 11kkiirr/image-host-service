@@ -15,9 +15,5 @@ class UserRepository(BaseRepository[User, int]):
         result = await self.session.execute(select(self.model).filter(self.model.email == email))
         return result.scalar_one_or_none()
 
-    async def get_by_username(self, username: str) -> Optional[User]:
-        result = await self.session.execute(select(self.model).filter(self.model.username == username))
-        return result.scalar_one_or_none()
-
     async def create_user(self, **kwargs) -> User:
         return await self.create(**kwargs)
