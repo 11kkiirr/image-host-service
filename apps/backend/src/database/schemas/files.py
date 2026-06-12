@@ -3,36 +3,28 @@ from typing import Optional
 from core.db.base import BaseSchema, TimestampReadSchema
 
 
-class UserRead(TimestampReadSchema):
+class FileRead(TimestampReadSchema):
     id: int
-    username: Optional[str] = None
-    email: Optional[str] = None
-    pass_hash: str
+    creator_id: int
     
-    is_banned: bool
+    filename: str
+    content_type: str
+    size: int
+    storage_path: str
+
     is_deleted: bool
+
+class FileCreate(BaseSchema):
+    creator_id: int
     
-    is_moderator: bool
-    is_admin: bool
-    
-    is_email_confirmed: bool
+    filename: str
+    content_type: str
+    size: int
+    storage_path: str
 
 
-class UserCreate(BaseSchema):
-    username: Optional[str] = None
-    email: Optional[str] = None
-    pass_hash: str
-
-
-class UserUpdate(BaseSchema):
-    username: Optional[str] = None
-    email: Optional[str] = None
-    pass_hash: Optional[str] = None
-    
-    is_banned: Optional[bool] = None
-    is_deleted: Optional[bool] = None
-    
-    is_moderator: Optional[bool] = None
-    is_admin: Optional[bool] = None
-    
-    is_email_confirmed: Optional[bool] = None
+class FileUpdate(BaseSchema):
+    filename: Optional[str] = None
+    content_type: Optional[str] = None
+    size: Optional[int] = None
+    storage_path: Optional[str] = None

@@ -31,14 +31,14 @@ class ItemCreate(BaseSchema):
 
 
 class ItemUpdate(BaseSchema):
-    username: Optional[str] = None
-    email: Optional[str] = None
-    pass_hash: Optional[str] = None
+    link_hash: Optional[str] = None
     
-    is_banned: Optional[bool] = None
-    is_deleted: Optional[bool] = None
+    title: Optional[str] = None
+    description: Optional[str] = None
+    file_id: Optional[int] = None
     
-    is_moderator: Optional[bool] = None
-    is_admin: Optional[bool] = None
+    is_global: Optional[bool] = None
+    views: Optional[int] = None
+    likes: Optional[int] = None
     
-    is_email_confirmed: Optional[bool] = None
+    deleted_at: Optional[str] = None
