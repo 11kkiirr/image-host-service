@@ -6,7 +6,7 @@ from sqlalchemy import BigInteger, String, Boolean, ForeignKey, Enum as SqlEnum
 from core.db.base.model import Base, TimestampMixin, BaseModel
 
 
-class File(Base, TimestampMixin):
+class FileModel(Base, TimestampMixin):
     __tablename__ = "files"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)

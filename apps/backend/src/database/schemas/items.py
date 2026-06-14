@@ -3,7 +3,7 @@ from typing import Optional
 from core.db.base import BaseSchema, TimestampReadSchema
 
 
-class ItemRead(TimestampReadSchema):
+class ItemReadSchema(TimestampReadSchema):
     id: int
     owner_id: int
     link_hash: str
@@ -19,7 +19,7 @@ class ItemRead(TimestampReadSchema):
     deleted_at: Optional[str] = None
 
 
-class ItemCreate(BaseSchema):
+class ItemCreateSchema(BaseSchema):
     owner_id: int
     link_hash: str
     
@@ -30,7 +30,7 @@ class ItemCreate(BaseSchema):
     is_global: bool = False
 
 
-class ItemUpdate(BaseSchema):
+class ItemUpdateSchema(BaseSchema):
     link_hash: Optional[str] = None
     
     title: Optional[str] = None

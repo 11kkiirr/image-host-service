@@ -7,7 +7,7 @@ from sqlalchemy import BigInteger, String, Boolean, ForeignKey, Enum as SqlEnum
 from core.db.base.model import Base, TimestampMixin, BaseModel
 
 
-class User(Base, TimestampMixin):
+class UserModel(Base, TimestampMixin):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)

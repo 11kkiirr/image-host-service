@@ -3,7 +3,7 @@ from typing import Optional
 from core.db.base import BaseSchema, TimestampReadSchema
 
 
-class UserRead(TimestampReadSchema):
+class UserReadSchema(TimestampReadSchema):
     id: int
     username: Optional[str] = None
     email: Optional[str] = None
@@ -18,13 +18,13 @@ class UserRead(TimestampReadSchema):
     is_email_confirmed: bool
 
 
-class UserCreate(BaseSchema):
+class UserCreateSchema(BaseSchema):
     username: Optional[str] = None
     email: Optional[str] = None
     pass_hash: str
 
 
-class UserUpdate(BaseSchema):
+class UserUpdateSchema(BaseSchema):
     username: Optional[str] = None
     email: Optional[str] = None
     pass_hash: Optional[str] = None

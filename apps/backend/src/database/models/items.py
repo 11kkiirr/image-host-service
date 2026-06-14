@@ -8,7 +8,7 @@ from sqlalchemy import BigInteger, String, Boolean, ForeignKey, DateTime, Enum a
 from core.db.base.model import Base, TimestampMixin, BaseModel
 
 
-class Item(Base, TimestampMixin):
+class ItemModel(Base, TimestampMixin):
     __tablename__ = "items"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)

@@ -3,7 +3,7 @@ from typing import Optional
 from core.db.base import BaseSchema, TimestampReadSchema
 
 
-class FileRead(TimestampReadSchema):
+class FileReadSchema(TimestampReadSchema):
     id: int
     creator_id: int
     
@@ -14,7 +14,7 @@ class FileRead(TimestampReadSchema):
 
     is_deleted: bool
 
-class FileCreate(BaseSchema):
+class FileCreateSchema(BaseSchema):
     creator_id: int
     
     filename: str
@@ -23,7 +23,7 @@ class FileCreate(BaseSchema):
     storage_path: str
 
 
-class FileUpdate(BaseSchema):
+class FileUpdateSchema(BaseSchema):
     filename: Optional[str] = None
     content_type: Optional[str] = None
     size: Optional[int] = None
