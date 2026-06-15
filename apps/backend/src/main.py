@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 import uvicorn
 
+from core.config import config
+
 app = FastAPI()
 
 
@@ -9,7 +11,7 @@ async def root():
     return {"message": "Hello World"}
 
 def main():
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host=config.APP_HOST, port=config.APP_PORT)
 
 
 

@@ -14,21 +14,18 @@ class Config(BaseSettings):
     APP_PORT: int = 8000
     BASE_URL: str
 
-    DATABASE_SYSTEM: str = "postgresql"
-    DATABASE_DRIVER: str = "asyncpg"
+    DATABASE_SYSTEM: SecretStr
+    DATABASE_DRIVER: SecretStr
     DATABASE_NAME: SecretStr
     DATABASE_USER: SecretStr
     DATABASE_PASSWORD: SecretStr
     DATABASE_HOST: SecretStr
     DATABASE_PORT: SecretStr
+    
+    SECRET_KEY: SecretStr
 
     BACKEND_DIR: ClassVar[Path] = Path(__file__).resolve().parent.parent.parent
     PROJECT_DIR: ClassVar[Path] = BACKEND_DIR.parent
-    SETTINGS_FILE: ClassVar[Path] = (
-        BACKEND_DIR / "settings.json"
-        if (BACKEND_DIR / "settings.json").exists()
-        else PROJECT_DIR / "settings.json"
-    )
     ENV_FILE: ClassVar[Path] = (
         BACKEND_DIR / ".env"
         if (BACKEND_DIR / ".env").exists()
