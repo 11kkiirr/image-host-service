@@ -12,7 +12,7 @@ class UserModel(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     username: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     pass_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     
     is_banned: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

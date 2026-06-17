@@ -8,6 +8,13 @@ from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+class AuthJWT(BaseSettings):
+    private_key: Path = BASE_DIR / "certs" / "private.pem"
+    public_key: Path = BASE_DIR / "certs" / "public.pem"
+    algorithm: str = "RS256"
+
 class Config(BaseSettings):
 
     APP_HOST: str = "localhost"
@@ -22,7 +29,6 @@ class Config(BaseSettings):
     DATABASE_HOST: SecretStr
     DATABASE_PORT: SecretStr
     
-    SECRET_KEY: SecretStr
 
     BACKEND_DIR: ClassVar[Path] = Path(__file__).resolve().parent.parent.parent
     PROJECT_DIR: ClassVar[Path] = BACKEND_DIR.parent
@@ -31,6 +37,8 @@ class Config(BaseSettings):
         if (BACKEND_DIR / ".env").exists()
         else PROJECT_DIR / ".env"
     )
+    
+    auth_jwt: AuthJWT = AuthJWT()
 
     model_config = SettingsConfigDict(
         env_file=ENV_FILE,
