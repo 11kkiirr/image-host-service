@@ -1,7 +1,10 @@
 
-from apps.backend.src.core.db.uow import UnitOfWork
+from fastapi import HTTPException
+
+from core.db.uow import UnitOfWork
+from database.models.users import UserModel
 from core import utils
-from database.repositories.users import UserRepository
+from database.schemas.users import UserCreateSchema
 
 
 class UserAuthService:
@@ -23,12 +26,19 @@ class UserAuthService:
         
         return password == pass_hash
     
-    async def register_user(self, email: str, password: str, username: str) -> bool:
+    
+    async def register_user(self, data: UserCreateSchema) -> UserModel:
         async with self.uow as uow:
-            user = uow.users.get_by_email(email)
+            user = await uow.users.get_by_email(data.email)
             if user:
-                return False
+                raise HTTPException(status_code=400, detail="Email already registered")
+
+            pass_hash = utils.hash_password(data.password)
             
-            pass_hash = utils.hash_password(password)
-            new_user = uow.users.create_user(email=email, pass_hash=pass_hash)
-            return True
+            new_user = await uow.users.create_user(
+                username=data.username,
+                email=data.email,
+                pass_hash=pass_hash
+            )
+            
+            return new_user

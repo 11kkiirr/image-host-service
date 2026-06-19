@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import BigInteger, String, Boolean, ForeignKey, Enum as SqlEnum
+from sqlalchemy import Integer, String, Boolean, ForeignKey, Enum as SqlEnum
 
 from core.db.base.model import Base, TimestampMixin, BaseModel
 
@@ -10,7 +10,7 @@ from core.db.base.model import Base, TimestampMixin, BaseModel
 class UserModel(Base, TimestampMixin):
     __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     username: Mapped[str | None] = mapped_column(String(255), nullable=True)
     email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     pass_hash: Mapped[str] = mapped_column(String(255), nullable=False)

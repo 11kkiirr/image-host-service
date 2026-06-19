@@ -1,5 +1,7 @@
 from typing import Optional
 
+from pydantic import Field, EmailStr
+
 from core.db.base import BaseSchema, TimestampReadSchema
 
 
@@ -19,9 +21,9 @@ class UserReadSchema(TimestampReadSchema):
 
 
 class UserCreateSchema(BaseSchema):
-    username: Optional[str] = None
-    email: Optional[str] = None
-    pass_hash: str
+    username: str = Field(..., min_length=3, max_length=50)
+    email: EmailStr
+    password: str = Field(..., min_length=8, max_length=50)
 
 
 class UserUpdateSchema(BaseSchema):

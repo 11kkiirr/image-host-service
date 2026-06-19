@@ -3,8 +3,10 @@ from typing import Callable, Optional, Type, TYPE_CHECKING
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-if TYPE_CHECKING:
-    from database.repositories.users import UserRepository
+from core.db.engine import session_maker
+
+
+from database.repositories.users import UserRepository
 
 class UnitOfWork:
     def __init__(self, session_factory: Callable[[], AsyncSession]):
@@ -44,3 +46,7 @@ class UnitOfWork:
     @property
     def users(self) -> "UserRepository":
         return UserRepository(self._active_session)
+
+
+def get_uow() -> UnitOfWork:
+    return UnitOfWork(session_factory=session_maker)

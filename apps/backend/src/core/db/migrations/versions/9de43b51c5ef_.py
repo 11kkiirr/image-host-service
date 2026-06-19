@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 95e9dcdb61fa
+Revision ID: 9de43b51c5ef
 Revises: 
-Create Date: 2026-06-16 16:10:34.156124
+Create Date: 2026-06-19 07:43:44.074995
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '95e9dcdb61fa'
+revision: str = '9de43b51c5ef'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -34,9 +34,9 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('users',
-    sa.Column('id', sa.BigInteger(), nullable=False),
+    sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('username', sa.String(length=255), nullable=True),
-    sa.Column('email', sa.String(length=255), nullable=True),
+    sa.Column('email', sa.String(length=255), nullable=False),
     sa.Column('pass_hash', sa.String(length=255), nullable=False),
     sa.Column('is_banned', sa.Boolean(), nullable=False),
     sa.Column('is_deleted', sa.Boolean(), nullable=False),
@@ -45,7 +45,8 @@ def upgrade() -> None:
     sa.Column('is_email_confirmed', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('email')
     )
     op.create_table('items',
     sa.Column('id', sa.BigInteger(), nullable=False),
