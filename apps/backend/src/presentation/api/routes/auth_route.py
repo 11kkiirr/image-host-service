@@ -33,7 +33,7 @@ async def login(
         raise HTTPException(status_code=401, detail="Неверный email или пароль")
     
     # Генерируем токен
-    token = create_access_token({"sub": str(user.id)})
+    token = utils.create_access_token({"sub": str(user.id)})
     
     # Записываем токен в куки
     response.set_cookie(

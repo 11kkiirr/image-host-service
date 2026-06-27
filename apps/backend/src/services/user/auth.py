@@ -12,19 +12,28 @@ class UserAuthService:
         self.uow: UnitOfWork = uow
 
 
-    async def authenticate_user(self, email: str, password: str) -> bool:
+    async def authenticate_user(self, email: str, password: str) -> UserModel | None:
         async with self.uow as uow:
             user = await uow.users.get_by_email(email)
             
         if not user:
-            return False
-        return self.verify_password(password, user.pass_hash)
+            return None
+        if not self.verify_password(password, user.pass_hash):
+            return None
+        if user.is_deleted:
+            return None
+        
+        return user
 
     def verify_password(self, password: str, pass_hash: str) -> bool:
-        
-        utils.validate_password(password, pass_hash.encode())
-        
-        return password == pass_hash
+        # `pass_hash` may be stored as `str` or `bytes` depending on DB/driver.
+        # Ensure we pass `bytes` to `validate_password` and return its result.
+        if isinstance(pass_hash, str):
+            hashed = pass_hash.encode()
+        else:
+            hashed = pass_hash
+
+        return utils.validate_password(password, hashed)
     
     
     async def register_user(self, data: UserCreateSchema) -> UserModel:
@@ -34,6 +43,9 @@ class UserAuthService:
                 raise HTTPException(status_code=400, detail="Email already registered")
 
             pass_hash = utils.hash_password(data.password)
+            # store as string (DB column is String) to avoid bytes/encode issues
+            if isinstance(pass_hash, bytes):
+                pass_hash = pass_hash.decode()
             
             new_user = await uow.users.create_user(
                 username=data.username,

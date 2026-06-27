@@ -38,7 +38,7 @@ def validate_password(
         password=password.encode(),
         hashed_password=hashed_password,
     )
-    
+
 
 def create_access_token(data: dict, expires_delta: timedelta = timedelta(seconds=1800)) -> str:
     """
@@ -76,6 +76,5 @@ def create_refresh_token(data: dict, expires_delta: timedelta = timedelta(days=7
     to_encode.update({"exp": expire, "type": "refresh"})
     
     encopded_jwt = encode_jwt(to_encode)
-    
     
     return encopded_jwt
