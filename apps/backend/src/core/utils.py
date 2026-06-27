@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 import jwt
 import bcrypt
 
@@ -36,3 +38,44 @@ def validate_password(
         password=password.encode(),
         hashed_password=hashed_password,
     )
+    
+
+def create_access_token(data: dict, expires_delta: timedelta = timedelta(seconds=1800)) -> str:
+    """
+    Создает JWT токен с указанными данными и временем жизни.
+    
+    :param data: Данные для включения в токен (например, идентификатор пользователя).
+    :param expires_delta: Время жизни токена в секундах (по умолчанию 30 минут).
+    :return: Сгенерированный JWT токен.
+    """
+    
+    to_encode = data.copy()
+    
+    expire = datetime.now(timezone.utc) + expires_delta
+    
+    to_encode.update({"exp": expire, "type": "access"})
+    
+    encopded_jwt = encode_jwt(to_encode)
+    
+    
+    return encopded_jwt
+        
+def create_refresh_token(data: dict, expires_delta: timedelta = timedelta(days=7)) -> str:
+    """
+    Создает JWT токен обновления с указанными данными и временем жизни.
+    
+    :param data: Данные для включения в токен (например, идентификатор пользователя).
+    :param expires_delta: Время жизни токена в секундах (по умолчанию 7 дней).
+    :return: Сгенерированный JWT токен обновления.
+    """
+    
+    to_encode = data.copy()
+    
+    expire = datetime.now(timezone.utc) + expires_delta
+    
+    to_encode.update({"exp": expire, "type": "refresh"})
+    
+    encopded_jwt = encode_jwt(to_encode)
+    
+    
+    return encopded_jwt

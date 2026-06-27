@@ -38,3 +38,7 @@ class UserUpdateSchema(BaseSchema):
     is_admin: Optional[bool] = None
     
     is_email_confirmed: Optional[bool] = None
+    
+class UserLoginSchema(BaseSchema):
+    email: EmailStr
+    password: str = Field(..., min_length=8, max_length=50)
