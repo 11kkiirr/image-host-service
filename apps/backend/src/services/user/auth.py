@@ -1,10 +1,11 @@
 
 from fastapi import HTTPException
 
+from core import utils
 from core.db.uow import UnitOfWork
 from database.models.users import UserModel
-from core import utils
 from database.schemas.users import UserCreateSchema
+from database.schemas.users import UserReadSchema
 
 
 class UserAuthService:
@@ -43,7 +44,6 @@ class UserAuthService:
                 raise HTTPException(status_code=400, detail="Email already registered")
 
             pass_hash = utils.hash_password(data.password)
-            # store as string (DB column is String) to avoid bytes/encode issues
             if isinstance(pass_hash, bytes):
                 pass_hash = pass_hash.decode()
             
@@ -54,3 +54,11 @@ class UserAuthService:
             )
             
             return new_user
+    
+    async def get_user_by_id(self, user_id: int) -> UserReadSchema | None:
+        async with self.uow as uow:
+            user = await uow.users.get_by_id(user_id)
+            if not user or user.is_deleted:
+                return None
+
+            return UserReadSchema.model_validate(user, from_attributes=True)

@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
 import jwt
 import bcrypt
@@ -18,7 +19,7 @@ def decode_jwt(
     token: str | bytes, 
     public_key: str = config.auth_jwt.public_key.read_text(), 
     algorithm: str = config.auth_jwt.algorithm
-) -> dict:
+) -> dict[str, Any]:
     decoded = jwt.decode(token, public_key, algorithms=[algorithm])
     return decoded
 

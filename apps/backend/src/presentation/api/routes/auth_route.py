@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from fastapi import APIRouter, Depends, HTTPException, Response
 
 from core import utils
@@ -5,7 +7,7 @@ from core.db.uow import UnitOfWork, get_uow
 
 from database.schemas.users import UserCreateSchema, UserLoginSchema
 from services.user.auth import UserAuthService
-
+from presentation.api.dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -33,16 +35,16 @@ async def login(
         raise HTTPException(status_code=401, detail="Неверный email или пароль")
     
     # Генерируем токен
-    token = utils.create_access_token({"sub": str(user.id)})
+    token = utils.create_access_token({"sub": str(user.id)}, expires_delta=timedelta(minutes=15))
     
     # Записываем токен в куки
     response.set_cookie(
-        key="access_token",       # Название куки
-        value=f"Bearer {token}",  # Значение (часто пишут просто токен, но FastAPI OAuth2 ожидает с префиксом)
-        httponly=True,            # КРИТИЧЕСКИ ВАЖНО: JS на фронтенде не сможет украсть эту куку
-        max_age=1800,             # Время жизни в секундах (например, 30 минут)
-        expires=1800,
-        samesite="lax",           # Защита от CSRF-атак
+        key="access_token",
+        value=f"Bearer {token}",
+        httponly=True,
+        max_age=900,
+        expires=900,
+        samesite="lax",
         secure=False,             # Поставь True, когда перейдешь на продакшен с HTTPS
     )
     

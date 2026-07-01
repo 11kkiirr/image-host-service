@@ -14,6 +14,10 @@ class UserRepository(BaseRepository[UserModel, int]):
     async def get_by_email(self, email: str) -> Optional[UserModel]:
         result = await self.session.execute(select(self.model).filter(self.model.email == email))
         return result.scalar_one_or_none()
+    
+    async def get_by_id(self, user_id: int) -> Optional[UserModel]:
+        result = await self.session.execute(select(self.model).filter(self.model.id == user_id))
+        return result.scalar_one_or_none()
 
     async def create_user(self, **kwargs) -> UserModel:
         return await self.create(**kwargs)

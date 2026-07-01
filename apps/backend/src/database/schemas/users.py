@@ -9,15 +9,15 @@ class UserReadSchema(TimestampReadSchema):
     id: int
     username: Optional[str] = None
     email: Optional[str] = None
-    pass_hash: str
+    pass_hash: str | None = None
     
-    is_banned: bool
-    is_deleted: bool
+    is_banned: bool | None = None
+    is_deleted: bool | None = None
     
-    is_moderator: bool
-    is_admin: bool
+    is_moderator: bool | None = None
+    is_admin: bool | None = None
     
-    is_email_confirmed: bool
+    is_email_confirmed: bool | None = None
 
 
 class UserCreateSchema(BaseSchema):
@@ -42,3 +42,15 @@ class UserUpdateSchema(BaseSchema):
 class UserLoginSchema(BaseSchema):
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=50)
+
+class UserProfileReadSchema(BaseSchema):
+    id: int
+    username: Optional[str] = None
+    
+    email: Optional[str] = None
+    is_email_confirmed: bool | None = None
+    
+    is_banned: bool | None = None
+    
+    is_moderator: bool | None = None
+    is_admin: bool | None = None
