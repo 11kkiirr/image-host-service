@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Панель управления Imgur Clone</title>
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: 40px auto; padding: 20px; background-color: #121212; color: #e0e0e0; }
+        .card { border: 1px solid #333; padding: 20px; border-radius: 8px; background-color: #1e1e1e; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 14px; color: #aaa; }
+        input[type="text"], input[type="password"], input[type="email"] { width: 100%; padding: 8px; border: 1px solid #444; border-radius: 4px; background: #2a2a2a; color: #fff; box-sizing: border-box; }
+        input[type="file"] { color: #fff; }
+        button { background: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; margin-bottom: 10px; }
+        button:hover { background: #0056b3; }
+        .btn-alt { background: #333; color: #ccc; }
+        .btn-alt:hover { background: #444; }
+        .result { margin-top: 15px; font-weight: bold; font-size: 14px; word-break: break-all; }
+        .hidden { display: none; }
+        .toggle-link { text-align: center; margin-top: 10px; font-size: 14px; color: #007bff; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <!-- СЕКЦИЯ ВХОДА / РЕГИСТРАЦИИ -->
+    <div id="authSection" class="card">
+        <h2 id="authTitle">Авторизация</h2>
+        
+        <form id="authForm">
+            <!-- Поле Username (показывается только при регистрации) -->
+            <div class="form-group hidden" id="usernameGroup">
+                <label for="username">Имя пользователя (username):</label>
+                <input type="text" id="username" placeholder="Придумайте никнейм">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" required placeholder="example@mail.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Пароль:</label>
+                <input type="password" id="password" required placeholder="Введите пароль">
+            </div>
+            
+            <button type="submit" id="submitBtn">Войти</button>
+        </form>
+        
+        <div id="toggleAuth" class="toggle-link">Нет аккаунта? Зарегистрироваться</div>
+        <div id="authResult" class="result"></div>
+    </div>
+
+    <!-- СЕКЦИЯ ЗАГРУЗКИ ФАЙЛОВ -->
+    <div id="uploadSection" class="card hidden">
+        <h2>Загрузка изображений</h2>
+        <form id="uploadForm" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="files">Выберите изображения (можно несколько):</label><br>
+                <input type="file" id="files" name="uploaded_files" multiple required>
+            </div>
+            <button type="submit">Отправить на сервер</button>
+        </form>
+        <button class="btn-alt" id="logoutBtn">Сменить аккаунт</button>
+        <div id="uploadResult" class="result"></div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://127.0.0.1:8000';
+        let isLoginMode = true; // Переключатель режима: login / register
+
+        const authTitle = document.getElementById('authTitle');
+        const usernameGroup = document.getElementById('usernameGroup');
+        const usernameInput = document.getElementById('username');
+        const submitBtn = document.getElementById('submitBtn');
+        const toggleAuth = document.getElementById('toggleAuth');
+        const authResult = document.getElementById('authResult');
+
+        // Переключение между Входом и Регистрацией
+        toggleAuth.addEventListener('click', () => {
+            isLoginMode = !isLoginMode;
+            authResult.innerText = '';
+            
+            if (isLoginMode) {
+                authTitle.innerText = 'Авторизация';
+                submitBtn.innerText = 'Войти';
+                toggleAuth.innerText = 'Нет аккаунта? Зарегистрироваться';
+                usernameGroup.classList.add('hidden');
+                usernameInput.removeAttribute('required');
+            } else {
+                authTitle.innerText = 'Регистрация';
+                submitBtn.innerText = 'Создать аккаунт';
+                toggleAuth.innerText = 'Уже есть аккаунт? Войти';
+                usernameGroup.classList.remove('hidden');
+                usernameInput.setAttribute('required', 'true');
+            }
+        });
+
+        // Обработка отправки формы Входа / Регистрации
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            authResult.style.color = '#e0e0e0';
+            authResult.innerText = isLoginMode ? 'Вход...' : 'Регистрация аккаунта...';
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // Формируем JSON-тело под твои Pydantic схемы
+            const payload = {
+                email: email,
+                password: password
+            };
+
+            if (!isLoginMode) {
+                payload.username = usernameInput.value;
+            }
+
+            const endpoint = isLoginMode ? '/auth/login' : '/auth/register';
+
+            try {
+                const response = await fetch(`${BASE_URL}${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload),
+                    credentials: 'include' // Позволяет сохранять куки от FastAPI
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (isLoginMode) {
+                        authResult.style.color = 'green';
+                        authResult.innerText = 'Успешный вход! Открываем загрузчик...';
+                        
+                        // Переключаем экраны
+                        document.getElementById('authSection').classList.add('hidden');
+                        document.getElementById('uploadSection').classList.remove('hidden');
+                    } else {
+                        authResult.style.color = 'green';
+                        authResult.innerText = 'Регистрация успешна! Теперь вы можете войти.';
+                        toggleAuth.click(); // Возвращаем режим в логин автоматически
+                    }
+                } else {
+                    authResult.style.color = 'red';
+                    authResult.innerText = 'Ошибка: ' + (data.detail || JSON.stringify(data));
+                }
+            } catch (error) {
+                authResult.style.color = 'red';
+                authResult.innerText = 'Ошибка сети: ' + error.message;
+            }
+        });
+
+        // Обработка отправки файлов
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const resultDiv = document.getElementById('uploadResult');
+            resultDiv.style.color = '#e0e0e0';
+            resultDiv.innerText = 'Отправка файлов...';
+
+            const fileInput = document.getElementById('files');
+            const formData = new FormData();
+
+            // Ключ 'uploaded_files' строго совпадает с аргументом в твоем роуте FastAPI
+            for (let i = 0; i < fileInput.files.length; i++) {
+                formData.append('uploaded_files', fileInput.files[i]);
+            }
+
+            try {
+                const response = await fetch(`${BASE_URL}/file/upload`, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include' // Передаёт проставленные куки авторизации
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.style.color = 'green';
+                    resultDiv.innerText = 'Успех! Файлы успешно сохранены: ' + JSON.stringify(data);
+                } else {
+                    resultDiv.style.color = 'red';
+                    resultDiv.innerText = 'Ошибка загрузки (' + response.status + '): ' + (data.detail || JSON.stringify(data));
+                }
+            } catch (error) {
+                resultDiv.style.color = 'red';
+                resultDiv.innerText = 'Ошибка сети: ' + error.message;
+            }
+        });
+
+        // Кнопка возврата к авторизации
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            document.getElementById('uploadSection').classList.add('hidden');
+            document.getElementById('authSection').classList.remove('hidden');
+            authResult.innerText = '';
+        });
+    </script>
+</body>
+</html>

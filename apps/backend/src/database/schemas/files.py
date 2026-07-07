@@ -16,6 +16,7 @@ class FileReadSchema(TimestampReadSchema):
 
 class FileCreateSchema(BaseSchema):
     creator_id: int
+    item_id: int | None = None
     
     filename: str
     content_type: str

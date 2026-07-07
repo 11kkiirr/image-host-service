@@ -7,6 +7,9 @@ from core.db.engine import session_maker
 
 
 from database.repositories.users import UserRepository
+from database.repositories.files import FileRepository
+from database.repositories.items import ItemRepository
+
 
 class UnitOfWork:
     def __init__(self, session_factory: Callable[[], AsyncSession]):
@@ -46,6 +49,13 @@ class UnitOfWork:
     @property
     def users(self) -> "UserRepository":
         return UserRepository(self._active_session)
+    
+    @property
+    def files(self) -> "FileRepository":
+        return FileRepository(self._active_session)
+    @property
+    def items(self) -> "ItemRepository":
+        return ItemRepository(self._active_session)
 
 
 def get_uow() -> UnitOfWork:

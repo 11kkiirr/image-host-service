@@ -17,7 +17,6 @@ class ItemModel(Base, TimestampMixin):
     
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(String(512), nullable=True)
-    file_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("files.id"), nullable=False)
     
     is_global: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     views: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)

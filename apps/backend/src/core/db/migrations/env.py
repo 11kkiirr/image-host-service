@@ -2,6 +2,7 @@ from logging.config import fileConfig
 import asyncio
 
 from sqlalchemy import pool
+from sqlalchemy.engine.url import make_url
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
@@ -55,7 +56,12 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    url = make_url(config.get_main_option("sqlalchemy.url"))
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        render_as_batch=url.get_backend_name() == "sqlite",
+    )
 
     with context.begin_transaction():
         context.run_migrations()

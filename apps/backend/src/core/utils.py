@@ -79,3 +79,19 @@ def create_refresh_token(data: dict, expires_delta: timedelta = timedelta(days=7
     encopded_jwt = encode_jwt(to_encode)
     
     return encopded_jwt
+
+
+def is_valid_filename(filename: str) -> bool:
+    """
+    Проверяет, является ли имя файла допустимым.
+    
+    :param filename: Имя файла для проверки.
+    :return: True, если имя файла допустимо, иначе False.
+    """
+    # Проверяем, что имя файла не пустое и не содержит запрещенных символов
+    if any(char in filename for char in r'<>:"/\|?*'):
+        return False
+    
+    # Дополнительные проверки можно добавить здесь (например, длина имени файла)
+    
+    return True

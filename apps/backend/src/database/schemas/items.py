@@ -10,7 +10,6 @@ class ItemReadSchema(TimestampReadSchema):
     
     title: str
     description: Optional[str] = None
-    file_id: int
     
     is_global: bool
     views: int
@@ -25,7 +24,6 @@ class ItemCreateSchema(BaseSchema):
     
     title: str
     description: Optional[str] = None
-    file_id: int
     
     is_global: bool = False
 
@@ -35,7 +33,6 @@ class ItemUpdateSchema(BaseSchema):
     
     title: Optional[str] = None
     description: Optional[str] = None
-    file_id: Optional[int] = None
     
     is_global: Optional[bool] = None
     views: Optional[int] = None
