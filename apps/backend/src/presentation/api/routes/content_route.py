@@ -1,6 +1,7 @@
 from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
+from fastapi.responses import FileResponse
 
 from database.schemas.users import UserProfileReadSchema
 from core import utils
@@ -25,19 +26,22 @@ async def upload_multiple_files(
         raise HTTPException(status_code=400, detail="No files provided")
 
     file_service = FileService(uow)
-    await file_service.process_file_upload(
+    
+    file_records = await file_service.process_file_upload(
         files=incoming_files,
         user_id=user_id
     )
-    return {"message": "Files uploaded successfully."}
-
-@router.post("/uploadfiles/")
-async def create_upload_files(files: List[UploadFile] = File(...)):
-    return {"filenames": [file.filename for file in files]}
+    return {
+        "message": "Files uploaded successfully.",
+        "files": file_records
+    }
 
 @router.get("/{content_uuid}")
 async def download_file(
     content_uuid: str,
     uow: UnitOfWork = Depends(get_uow)
 ):
-    ...
+    file_service = FileService(uow)
+    
+    file_metadata = await file_service.get_file_metadata_by_uuid(content_uuid)
+    return FileResponse(path=file_metadata.storage_path, filename=f"{file_metadata.filename}")

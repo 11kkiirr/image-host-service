@@ -1,5 +1,7 @@
 from typing import Optional
+from uuid import UUID
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.files import FileModel
@@ -17,8 +19,13 @@ class FileRepository(BaseRepository[FileModel, int]):
             await self.session.refresh(file)
         return files
     
-    async def get_file_by_uuid(self, uuid: str) -> Optional[FileModel]:
+    async def get_file_by_uuid(self, uuid: str | UUID) -> Optional[FileModel]:
+        try:
+            normalized_uuid = UUID(uuid) if isinstance(uuid, str) else uuid
+        except ValueError:
+            return None
+
         result = await self.session.execute(
-            self.model.__table__.select().where(self.model.uuid == uuid)
+            select(FileModel).where(FileModel.uuid == normalized_uuid)
         )
         return result.scalar_one_or_none()

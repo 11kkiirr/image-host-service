@@ -160,7 +160,6 @@
             const fileInput = document.getElementById('files');
             const formData = new FormData();
 
-            // Ключ 'uploaded_files' строго совпадает с аргументом в твоем роуте FastAPI
             for (let i = 0; i < fileInput.files.length; i++) {
                 formData.append('uploaded_files', fileInput.files[i]);
             }
@@ -169,14 +168,39 @@
                 const response = await fetch(`${BASE_URL}/file/upload`, {
                     method: 'POST',
                     body: formData,
-                    credentials: 'include' // Передаёт проставленные куки авторизации
+                    credentials: 'include'
                 });
 
                 const data = await response.json();
                 
                 if (response.ok) {
                     resultDiv.style.color = 'green';
-                    resultDiv.innerText = 'Успех! Файлы успешно сохранены: ' + JSON.stringify(data);
+                    
+                    // Начинаем формировать красивый HTML со ссылками
+                    let htmlContent = `<p style="margin-bottom: 10px;">🎉 Файлы успешно загружены!</p>`;
+                    htmlContent += `<ul style="list-style-type: none; padding: 0; margin: 0;">`;
+                    
+                    // Перебираем массив сохраненных файлов из ответа бэкенда
+                    data.files.forEach(file => {
+                        // Формируем прямую ссылку по UUID на твою новую ручку скачивания
+                        const fileLink = `${BASE_URL}/file/${file.uuid}`;
+                        
+                        htmlContent += `
+                            <li style="margin-bottom: 8px; padding: 8px; background: #2a2a2a; border-radius: 4px;">
+                                <strong style="color: #aaa;">${file.filename}</strong><br>
+                                <a href="${fileLink}" target="_blank" style="color: #007bff; text-decoration: none; font-size: 13px;">
+                                    ${fileLink}
+                                </a>
+                            </li>
+                        `;
+                    });
+                    
+                    htmlContent += `</ul>`;
+                    resultDiv.innerHTML = htmlContent;
+                    
+                    // Очищаем инпут выбора файлов, чтобы можно было загружать новые
+                    document.getElementById('uploadForm').reset();
+                    
                 } else {
                     resultDiv.style.color = 'red';
                     resultDiv.innerText = 'Ошибка загрузки (' + response.status + '): ' + (data.detail || JSON.stringify(data));

@@ -4,6 +4,7 @@ from aiofiles import open as aio_open
 
 from fastapi import HTTPException, UploadFile
 
+from database.schemas.files import FileReadSchema
 from database.models.files import FileModel
 from core.db.uow import UnitOfWork
 
@@ -60,10 +61,11 @@ class FileService:
                 file_records.append(file_record)
             
             await uow.files.create_files(files=file_records)
+        return file_records
     
-    async def download_file(self, uuid: str):
+    async def get_file_metadata_by_uuid(self, uuid: str) -> FileReadSchema:
         async with self.uow as uow:
-            file_record = await uow.files.get_file_by_uuid(uuid=uuid)
+            file_record = await uow.files.get_file_by_uuid(uuid)
             if not file_record:
                 raise HTTPException(status_code=404, detail="File not found")
-            return file_record
+            return FileReadSchema.model_validate(file_record)

@@ -1,18 +1,20 @@
 from typing import Optional
+from uuid import UUID
 
 from core.db.base import BaseSchema, TimestampReadSchema
 
 
 class FileReadSchema(TimestampReadSchema):
-    id: int
+    uuid: UUID
     creator_id: int
-    
+    item_id: int | None = None
+
     filename: str
     content_type: str
     size: int
     storage_path: str
 
-    is_deleted: bool
+    is_deleted: bool | None = False
 
 class FileCreateSchema(BaseSchema):
     creator_id: int
