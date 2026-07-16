@@ -1,5 +1,5 @@
 import os
-from uuid import uuid4
+from uuid import UUID, uuid4
 from aiofiles import open as aio_open
 
 from fastapi import HTTPException, UploadFile
@@ -24,7 +24,7 @@ class FileService:
         self,
         files: list[UploadFile],
         user_id: int,
-        item_id: int | None = None
+        item_uuid: UUID | None = None
     ):
         async with self.uow as uow:
             file_records = []
@@ -54,7 +54,7 @@ class FileService:
                     content_type=content_type,
                     size=len(file_data),
                     storage_path=f"uploads/{file_uuid_value}{file_ext}",
-                    item_id=item_id,
+                    item_uuid=item_uuid,
                 )
                 async with aio_open(f"uploads/{file_uuid_value}{file_ext}", "wb") as f: # type: ignore
                     await f.write(file_data)

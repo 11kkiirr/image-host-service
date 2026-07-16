@@ -1,4 +1,5 @@
 from typing import Annotated, List
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from fastapi.responses import FileResponse
@@ -18,6 +19,7 @@ router = APIRouter(prefix="/file", tags=["file"])
 async def upload_multiple_files(
     files: Annotated[list[UploadFile] | None, File(alias="files")] = None,
     uploaded_files: Annotated[list[UploadFile] | None, File(alias="uploaded_files")] = None,
+    item_uuid: UUID | None = None,
     user_id: int = Depends(get_current_user),
     uow: UnitOfWork = Depends(get_uow)
 ):
@@ -29,7 +31,8 @@ async def upload_multiple_files(
     
     file_records = await file_service.process_file_upload(
         files=incoming_files,
-        user_id=user_id
+        user_id=user_id,
+        item_uuid=item_uuid
     )
     return {
         "message": "Files uploaded successfully.",

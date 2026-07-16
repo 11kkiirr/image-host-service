@@ -3,6 +3,7 @@ from typing import Any
 
 import jwt
 import bcrypt
+import secrets
 
 from core.config import config
 
@@ -95,3 +96,12 @@ def is_valid_filename(filename: str) -> bool:
     # Дополнительные проверки можно добавить здесь (например, длина имени файла)
     
     return True
+
+def generate_link_hash(length: int = 8) -> str:
+    """
+    Генерирует случайный хэш для ссылки.
+    
+    :param length: Длина генерируемого хэша (по умолчанию 12 символов).
+    :return: Сгенерированный случайный хэш.
+    """
+    return secrets.token_urlsafe(length)

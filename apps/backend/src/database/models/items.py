@@ -1,9 +1,9 @@
 from __future__ import annotations
 from datetime import datetime
-from typing import TYPE_CHECKING
+from uuid import UUID
 
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import BigInteger, String, Boolean, DateTime,Text
+from sqlalchemy import BigInteger, String, Boolean, DateTime, Text, Uuid
 
 from core.db.base.model import Base, TimestampMixin
 
@@ -11,7 +11,7 @@ from core.db.base.model import Base, TimestampMixin
 class ItemModel(Base, TimestampMixin):
     __tablename__ = "items"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    uuid: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     owner_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     link_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     

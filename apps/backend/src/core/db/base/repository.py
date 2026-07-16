@@ -14,7 +14,14 @@ class BaseRepository(Generic[ModelType, PKType]):
         self.session = session
 
     async def get(self, id: PKType) -> ModelType | None:
-        id_column = getattr(self.model, "id")
+        pk_name = next(
+            (name for name in ("id", "uuid") if hasattr(self.model, name)),
+            None,
+        )
+        if pk_name is None:
+            raise AttributeError(f"Model {self.model.__name__} has no primary key field")
+
+        id_column = getattr(self.model, pk_name)
         result = await self.session.execute(
             select(self.model).filter(id_column == id)
         )

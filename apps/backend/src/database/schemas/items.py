@@ -1,14 +1,15 @@
 from typing import Optional
+from uuid import UUID
 
 from core.db.base import BaseSchema, TimestampReadSchema
 
 
 class ItemReadSchema(TimestampReadSchema):
-    id: int
+    uuid: UUID
     owner_id: int
     link_hash: str
     
-    title: str
+    title: str | None = None
     description: Optional[str] = None
     
     is_global: bool
@@ -20,22 +21,16 @@ class ItemReadSchema(TimestampReadSchema):
 
 class ItemCreateSchema(BaseSchema):
     owner_id: int
-    link_hash: str
+    link_hash: str | None = None
     
-    title: str
+    title: str | None = None
     description: Optional[str] = None
     
     is_global: bool = False
 
 
 class ItemUpdateSchema(BaseSchema):
-    link_hash: Optional[str] = None
-    
     title: Optional[str] = None
     description: Optional[str] = None
     
     is_global: Optional[bool] = None
-    views: Optional[int] = None
-    likes: Optional[int] = None
-    
-    deleted_at: Optional[str] = None

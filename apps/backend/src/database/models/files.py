@@ -14,7 +14,7 @@ class FileModel(Base, TimestampMixin):
     uuid: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     creator_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
 
-    item_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("items.id"), nullable=True)
+    item_id: Mapped[UUID | None] = mapped_column(Uuid, ForeignKey("items.uuid"), nullable=True)
     
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
     content_type: Mapped[str] = mapped_column(String(255), nullable=False)

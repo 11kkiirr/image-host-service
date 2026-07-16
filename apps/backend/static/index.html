@@ -2,220 +2,376 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Панель управления Imgur Clone</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown Platform</title>
+    <!-- Библиотека для парсинга Markdown -->
+    <script src="[https://cdn.jsdelivr.net/npm/marked/marked.min.js](https://cdn.jsdelivr.net/npm/marked/marked.min.js)"></script>
     <style>
-        body { font-family: sans-serif; max-width: 500px; margin: 40px auto; padding: 20px; background-color: #121212; color: #e0e0e0; }
-        .card { border: 1px solid #333; padding: 20px; border-radius: 8px; background-color: #1e1e1e; margin-bottom: 20px; }
+        /* Базовые стили в стиле темной темы GitHub */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; background-color: #0d1117; color: #c9d1d9; }
+        .card { border: 1px solid #30363d; padding: 25px; border-radius: 6px; background-color: #161b22; margin-bottom: 20px; }
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-size: 14px; color: #aaa; }
-        input[type="text"], input[type="password"], input[type="email"] { width: 100%; padding: 8px; border: 1px solid #444; border-radius: 4px; background: #2a2a2a; color: #fff; box-sizing: border-box; }
-        input[type="file"] { color: #fff; }
-        button { background: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; margin-bottom: 10px; }
-        button:hover { background: #0056b3; }
-        .btn-alt { background: #333; color: #ccc; }
-        .btn-alt:hover { background: #444; }
-        .result { margin-top: 15px; font-weight: bold; font-size: 14px; word-break: break-all; }
-        .hidden { display: none; }
-        .toggle-link { text-align: center; margin-top: 10px; font-size: 14px; color: #007bff; cursor: pointer; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; }
+        input[type="text"], input[type="password"], input[type="email"], textarea { 
+            width: 100%; padding: 10px; border: 1px solid #30363d; border-radius: 6px; background: #0d1117; color: #c9d1d9; box-sizing: border-box; font-family: inherit;
+        }
+        textarea { resize: vertical; min-height: 300px; font-family: 'Courier New', Courier, monospace; }
+        button { background: #238636; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s; }
+        button:hover { background: #2ea043; }
+        .btn-alt { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; }
+        .btn-alt:hover { background: #30363d; }
+        .hidden { display: none !important; } /* Важно для системы роутинга */
+        .toggle-link { text-align: center; margin-top: 15px; font-size: 14px; color: #58a6ff; cursor: pointer; }
+        
+        /* Стили для предпросмотра */
+        .editor-container { display: flex; gap: 20px; flex-direction: column; }
+        #preview { border: 1px dashed #30363d; padding: 15px; border-radius: 6px; background: #0d1117; min-height: 300px; }
+        #preview img { max-width: 100%; border-radius: 6px; }
+        #preview h1, #preview h2 { border-bottom: 1px solid #21262d; padding-bottom: 5px; }
+        .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
-    <!-- СЕКЦИЯ ВХОДА / РЕГИСТРАЦИИ -->
-    <div id="authSection" class="card">
-        <h2 id="authTitle">Авторизация</h2>
-        
+    <!-- ================= ВИД 1: АВТОРИЗАЦИЯ ================= -->
+    <div id="view-auth" class="card">
+        <h2 id="authTitle">Вход в систему</h2>
         <form id="authForm">
-            <!-- Поле Username (показывается только при регистрации) -->
             <div class="form-group hidden" id="usernameGroup">
-                <label for="username">Имя пользователя (username):</label>
-                <input type="text" id="username" placeholder="Придумайте никнейм">
+                <label>Имя пользователя:</label>
+                <input type="text" id="username">
             </div>
-
             <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" id="email" required placeholder="example@mail.com">
+                <label>Email:</label>
+                <input type="email" id="email" required>
             </div>
-            
             <div class="form-group">
-                <label for="password">Пароль:</label>
-                <input type="password" id="password" required placeholder="Введите пароль">
+                <label>Пароль:</label>
+                <input type="password" id="password" required>
             </div>
-            
             <button type="submit" id="submitBtn">Войти</button>
         </form>
-        
         <div id="toggleAuth" class="toggle-link">Нет аккаунта? Зарегистрироваться</div>
-        <div id="authResult" class="result"></div>
+        <div id="authResult" style="margin-top: 15px; text-align: center;"></div>
     </div>
 
-    <!-- СЕКЦИЯ ЗАГРУЗКИ ФАЙЛОВ -->
-    <div id="uploadSection" class="card hidden">
-        <h2>Загрузка изображений</h2>
-        <form id="uploadForm" method="POST" enctype="multipart/form-data">
+    <!-- ================= ВИД 2: ПАНЕЛЬ УПРАВЛЕНИЯ ================= -->
+    <div id="view-dashboard" class="card hidden">
+        <h2>Добро пожаловать!</h2>
+        <p>Вы успешно авторизованы. Что будем делать?</p>
+        <button onclick="startNewPost()">📝 Создать новый пост</button>
+        <button class="btn-alt" onclick="logout()" style="margin-top: 10px;">🚪 Выйти</button>
+    </div>
+
+    <!-- ================= ВИД 3: РЕДАКТОР ПОСТА ================= -->
+    <div id="view-editor" class="card hidden">
+        <div class="status-bar">
+            <h2>Редактор поста</h2>
+            <span id="saveStatus" style="font-size: 14px; font-weight: bold; color: #8b949e;"></span>
+        </div>
+        
+        <form id="postForm">
             <div class="form-group">
-                <label for="files">Выберите изображения (можно несколько):</label><br>
-                <input type="file" id="files" name="uploaded_files" multiple required>
+                <input type="text" id="postTitle" required placeholder="Заголовок поста..." style="font-size: 18px; font-weight: bold;">
             </div>
-            <button type="submit">Отправить на сервер</button>
+            
+            <div class="editor-container">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <textarea id="postContent" placeholder="Пишите текст здесь... (Поддерживается Markdown и вставка картинок Ctrl+V)"></textarea>
+                </div>
+                <div>
+                    <h3>Предпросмотр:</h3>
+                    <div id="preview"></div>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 15px;">
+                <label>
+                    <input type="checkbox" id="isGlobal" checked> Публичный пост (доступен всем)
+                </label>
+            </div>
+
+            <button type="submit">🚀 Опубликовать пост</button>
+            <button type="button" class="btn-alt" onclick="cancelPost()" style="margin-top: 10px;">❌ Отменить и вернуться</button>
         </form>
-        <button class="btn-alt" id="logoutBtn">Сменить аккаунт</button>
-        <div id="uploadResult" class="result"></div>
+        
+        <div id="postResult" style="margin-top: 15px; text-align: center; font-weight: bold;"></div>
     </div>
 
     <script>
-        const BASE_URL = 'http://127.0.0.1:8000';
-        let isLoginMode = true; // Переключатель режима: login / register
+        // ================= SPA РОУТИНГ =================
+        function showView(viewId) {
+            document.getElementById('view-auth').classList.add('hidden');
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-editor').classList.add('hidden');
+            document.getElementById(viewId).classList.remove('hidden');
+        }
 
-        const authTitle = document.getElementById('authTitle');
-        const usernameGroup = document.getElementById('usernameGroup');
-        const usernameInput = document.getElementById('username');
-        const submitBtn = document.getElementById('submitBtn');
-        const toggleAuth = document.getElementById('toggleAuth');
-        const authResult = document.getElementById('authResult');
-
-        // Переключение между Входом и Регистрацией
-        toggleAuth.addEventListener('click', () => {
-            isLoginMode = !isLoginMode;
-            authResult.innerText = '';
-            
-            if (isLoginMode) {
-                authTitle.innerText = 'Авторизация';
-                submitBtn.innerText = 'Войти';
-                toggleAuth.innerText = 'Нет аккаунта? Зарегистрироваться';
-                usernameGroup.classList.add('hidden');
-                usernameInput.removeAttribute('required');
-            } else {
-                authTitle.innerText = 'Регистрация';
-                submitBtn.innerText = 'Создать аккаунт';
-                toggleAuth.innerText = 'Уже есть аккаунт? Войти';
-                usernameGroup.classList.remove('hidden');
-                usernameInput.setAttribute('required', 'true');
+        // Простая проверка авторизации при загрузке страницы
+        // Попытаемся получить профиль. Если кука жива - пустит в дашборд
+        async function checkAuthStatus() {
+            try {
+                const res = await fetch('/profile/me', { credentials: 'include' });
+                if (res.ok) {
+                    showView('view-dashboard');
+                } else {
+                    showView('view-auth');
+                }
+            } catch (err) {
+                showView('view-auth');
             }
+        }
+        checkAuthStatus(); // Вызываем при загрузке
+
+        // ================= ЛОГИКА АВТОРИЗАЦИИ =================
+        let isLoginMode = true;
+        document.getElementById('toggleAuth').addEventListener('click', () => {
+            isLoginMode = !isLoginMode;
+            document.getElementById('authTitle').innerText = isLoginMode ? 'Вход в систему' : 'Регистрация';
+            document.getElementById('submitBtn').innerText = isLoginMode ? 'Войти' : 'Зарегистрироваться';
+            document.getElementById('toggleAuth').innerText = isLoginMode ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти';
+            document.getElementById('usernameGroup').classList.toggle('hidden', isLoginMode);
+            document.getElementById('username').required = !isLoginMode;
         });
 
-        // Обработка отправки формы Входа / Регистрации
         document.getElementById('authForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            authResult.style.color = '#e0e0e0';
-            authResult.innerText = isLoginMode ? 'Вход...' : 'Регистрация аккаунта...';
-
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-
-            // Формируем JSON-тело под твои Pydantic схемы
-            const payload = {
-                email: email,
-                password: password
-            };
-
-            if (!isLoginMode) {
-                payload.username = usernameInput.value;
-            }
+            const payload = { email, password };
+            if (!isLoginMode) payload.username = document.getElementById('username').value;
 
             const endpoint = isLoginMode ? '/auth/login' : '/auth/register';
 
             try {
-                const response = await fetch(`${BASE_URL}${endpoint}`, {
+                const res = await fetch(endpoint, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
-                    credentials: 'include' // Позволяет сохранять куки от FastAPI
+                    credentials: 'include'
                 });
-
-                const data = await response.json();
-
-                if (response.ok) {
+                
+                if (res.ok) {
                     if (isLoginMode) {
-                        authResult.style.color = 'green';
-                        authResult.innerText = 'Успешный вход! Открываем загрузчик...';
-                        
-                        // Переключаем экраны
-                        document.getElementById('authSection').classList.add('hidden');
-                        document.getElementById('uploadSection').classList.remove('hidden');
+                        showView('view-dashboard');
                     } else {
-                        authResult.style.color = 'green';
-                        authResult.innerText = 'Регистрация успешна! Теперь вы можете войти.';
-                        toggleAuth.click(); // Возвращаем режим в логин автоматически
+                        document.getElementById('toggleAuth').click();
+                        alert('Успешная регистрация! Теперь войдите.');
                     }
                 } else {
-                    authResult.style.color = 'red';
-                    authResult.innerText = 'Ошибка: ' + (data.detail || JSON.stringify(data));
+                    const data = await res.json();
+                    document.getElementById('authResult').innerText = data.detail || 'Ошибка';
+                    document.getElementById('authResult').style.color = 'red';
                 }
-            } catch (error) {
-                authResult.style.color = 'red';
-                authResult.innerText = 'Ошибка сети: ' + error.message;
+            } catch (err) {
+                console.error(err);
             }
         });
 
-        // Обработка отправки файлов
-        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const resultDiv = document.getElementById('uploadResult');
-            resultDiv.style.color = '#e0e0e0';
-            resultDiv.innerText = 'Отправка файлов...';
+        function logout() {
+            // В идеале тут должен быть fetch на /auth/logout, если он есть. 
+            // Пока просто перезагружаем страницу, куки очистятся если закрыть браузер, или мы можем удалять их с сервера.
+            location.reload(); 
+        }
 
-            const fileInput = document.getElementById('files');
-            const formData = new FormData();
+        // ================= ЛОГИКА РЕДАКТОРА (DRAFT-FIRST) =================
+        let currentPostUuid = null;
+        let autoSaveTimeout = null;
+        
+        const titleInput = document.getElementById('postTitle');
+        const contentInput = document.getElementById('postContent');
+        const isGlobalInput = document.getElementById('isGlobal');
+        const saveStatus = document.getElementById('saveStatus');
+        const previewDiv = document.getElementById('preview');
 
-            for (let i = 0; i < fileInput.files.length; i++) {
-                formData.append('uploaded_files', fileInput.files[i]);
+        // Шаг 1: Создание черновика
+        async function startNewPost() {
+            try {
+                // Создаем пустой пост
+                const res = await fetch('/post/create_new', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: 'Новый пост', description: '', is_global: false }),
+                    credentials: 'include'
+                });
+                
+                const data = await res.json();
+                if (res.ok) {
+                    currentPostUuid = data.uuid;
+                    // Сбрасываем поля
+                    titleInput.value = '';
+                    contentInput.value = '';
+                    isGlobalInput.checked = true;
+                    previewDiv.innerHTML = '';
+                    document.getElementById('postResult').innerHTML = '';
+                    saveStatus.innerText = '';
+                    
+                    showView('view-editor');
+                } else {
+                    alert('Ошибка создания черновика: ' + (data.detail || JSON.stringify(data)));
+                }
+            } catch (err) {
+                alert('Ошибка сети при создании поста');
             }
+        }
+
+        function cancelPost() {
+            if (confirm('Выйти из редактора? (Черновик останется в базе)')) {
+                currentPostUuid = null;
+                showView('view-dashboard');
+            }
+        }
+
+        // Шаг 2: Автосохранение
+        async function saveDraft() {
+            if (!currentPostUuid) return;
+
+            saveStatus.innerText = '⏳ Сохранение...';
+            saveStatus.style.color = '#8b949e';
+
+            const payload = {
+                title: titleInput.value || 'Без заголовка',
+                description: contentInput.value,
+                is_global: isGlobalInput.checked
+            };
 
             try {
-                const response = await fetch(`${BASE_URL}/file/upload`, {
+                // Отправляем изменения, передавая item_uuid как query параметр
+                const res = await fetch(`/post/update?item_uuid=${currentPostUuid}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+
+                if (res.ok) {
+                    saveStatus.innerText = '✅ Сохранено';
+                    saveStatus.style.color = '#2ea043';
+                } else {
+                    saveStatus.innerText = '❌ Ошибка';
+                    saveStatus.style.color = 'red';
+                }
+            } catch (err) {
+                saveStatus.innerText = '❌ Нет сети';
+            }
+        }
+
+        function handleInput() {
+            // Обновляем превью
+            previewDiv.innerHTML = marked.parse(contentInput.value);
+            
+            // Debounce для сохранения
+            clearTimeout(autoSaveTimeout);
+            saveStatus.innerText = 'Печатает...';
+            saveStatus.style.color = '#8b949e';
+            
+            autoSaveTimeout = setTimeout(() => {
+                saveDraft();
+            }, 1000);
+        }
+
+        titleInput.addEventListener('input', handleInput);
+        contentInput.addEventListener('input', handleInput);
+        isGlobalInput.addEventListener('change', saveDraft);
+
+        // Вставка текста в позицию курсора
+        function insertAtCursor(myField, myValue) {
+            if (myField.selectionStart || myField.selectionStart === '0') {
+                var startPos = myField.selectionStart;
+                var endPos = myField.selectionEnd;
+                myField.value = myField.value.substring(0, startPos) + myValue + myField.value.substring(endPos, myField.value.length);
+                myField.selectionStart = startPos + myValue.length;
+                myField.selectionEnd = startPos + myValue.length;
+            } else {
+                myField.value += myValue;
+            }
+            myField.dispatchEvent(new Event('input')); 
+        }
+
+        // Шаг 3: Загрузка файлов (С привязкой к item_uuid)
+        async function uploadImage(file) {
+            if (!currentPostUuid) {
+                alert("Сначала дождитесь создания черновика");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('uploaded_files', file);
+
+            const placeholder = `![Загрузка ${file.name}...]()\n`;
+            insertAtCursor(contentInput, placeholder);
+
+            try {
+                // Передаем item_uuid в параметры запроса, так как FastAPI ожидает его там
+                const res = await fetch(`/file/upload?item_uuid=${currentPostUuid}`, {
                     method: 'POST',
                     body: formData,
                     credentials: 'include'
                 });
-
-                const data = await response.json();
+                const data = await res.json();
                 
-                if (response.ok) {
-                    resultDiv.style.color = 'green';
-                    
-                    // Начинаем формировать красивый HTML со ссылками
-                    let htmlContent = `<p style="margin-bottom: 10px;">🎉 Файлы успешно загружены!</p>`;
-                    htmlContent += `<ul style="list-style-type: none; padding: 0; margin: 0;">`;
-                    
-                    // Перебираем массив сохраненных файлов из ответа бэкенда
-                    data.files.forEach(file => {
-                        // Формируем прямую ссылку по UUID на твою новую ручку скачивания
-                        const fileLink = `${BASE_URL}/file/${file.uuid}`;
-                        
-                        htmlContent += `
-                            <li style="margin-bottom: 8px; padding: 8px; background: #2a2a2a; border-radius: 4px;">
-                                <strong style="color: #aaa;">${file.filename}</strong><br>
-                                <a href="${fileLink}" target="_blank" style="color: #007bff; text-decoration: none; font-size: 13px;">
-                                    ${fileLink}
-                                </a>
-                            </li>
-                        `;
-                    });
-                    
-                    htmlContent += `</ul>`;
-                    resultDiv.innerHTML = htmlContent;
-                    
-                    // Очищаем инпут выбора файлов, чтобы можно было загружать новые
-                    document.getElementById('uploadForm').reset();
-                    
+                if (res.ok && data.files && data.files.length > 0) {
+                    const fileUuid = data.files[0].uuid;
+                    const markdownImage = `![${data.files[0].filename}](/file/${fileUuid})\n`;
+                    contentInput.value = contentInput.value.replace(placeholder, markdownImage);
+                    contentInput.dispatchEvent(new Event('input')); // Обновляем превью и вызываем автосохранение
                 } else {
-                    resultDiv.style.color = 'red';
-                    resultDiv.innerText = 'Ошибка загрузки (' + response.status + '): ' + (data.detail || JSON.stringify(data));
+                    alert('Ошибка загрузки файла');
+                    contentInput.value = contentInput.value.replace(placeholder, '');
                 }
-            } catch (error) {
-                resultDiv.style.color = 'red';
-                resultDiv.innerText = 'Ошибка сети: ' + error.message;
+            } catch (err) {
+                console.error(err);
+                contentInput.value = contentInput.value.replace(placeholder, '');
+            }
+        }
+
+        // Вставка картинок
+        contentInput.addEventListener('paste', (e) => {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let item of items) {
+                if (item.kind === 'file' && item.type.startsWith('image/')) {
+                    e.preventDefault();
+                    uploadImage(item.getAsFile());
+                }
             }
         });
 
-        // Кнопка возврата к авторизации
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            document.getElementById('uploadSection').classList.add('hidden');
-            document.getElementById('authSection').classList.remove('hidden');
-            authResult.innerText = '';
+        contentInput.addEventListener('dragover', (e) => e.preventDefault());
+        contentInput.addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                const file = e.dataTransfer.files[0];
+                if (file.type.startsWith('image/')) uploadImage(file);
+            }
+        });
+
+        // Шаг 4: Публикация
+        document.getElementById('postForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentPostUuid) return;
+
+            const resultDiv = document.getElementById('postResult');
+            resultDiv.innerText = 'Генерация ссылки...';
+
+            try {
+                const res = await fetch(`/post/create_link?item_uuid=${currentPostUuid}`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    const link = `/p/h/${data.link_hash}`;
+                    resultDiv.innerHTML = `🎉 Пост опубликован! <a href="${link}" target="_blank" style="color: #58a6ff;">Открыть пост</a>`;
+                    saveStatus.innerText = 'Готово';
+                    saveStatus.style.color = '#58a6ff';
+                } else {
+                    resultDiv.innerText = 'Ошибка: ' + (data.detail || JSON.stringify(data));
+                }
+            } catch (err) {
+                resultDiv.innerText = 'Ошибка сети: ' + err.message;
+            }
         });
     </script>
 </body>

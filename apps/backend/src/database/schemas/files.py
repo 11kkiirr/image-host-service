@@ -7,7 +7,7 @@ from core.db.base import BaseSchema, TimestampReadSchema
 class FileReadSchema(TimestampReadSchema):
     uuid: UUID
     creator_id: int
-    item_id: int | None = None
+    item_id: UUID | None = None
 
     filename: str
     content_type: str
@@ -18,7 +18,7 @@ class FileReadSchema(TimestampReadSchema):
 
 class FileCreateSchema(BaseSchema):
     creator_id: int
-    item_id: int | None = None
+    item_id: UUID | None = None
     
     filename: str
     content_type: str
