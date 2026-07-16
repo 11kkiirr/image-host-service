@@ -20,7 +20,6 @@ class ItemReadSchema(TimestampReadSchema):
 
 
 class ItemCreateSchema(BaseSchema):
-    owner_id: int
     link_hash: str | None = None
     
     title: str | None = None

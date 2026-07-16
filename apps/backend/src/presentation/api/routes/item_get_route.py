@@ -1,12 +1,10 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException
 
-from apps.backend.src.services.item.get import ItemGetService
-from services.item.post import ItemCreateService
+from services.item.get import ItemGetService
 from core.db.uow import UnitOfWork, get_uow
 from presentation.api.dependencies.auth import get_current_user
-from database.schemas.items import ItemCreateSchema, ItemUpdateSchema
 
 router = APIRouter(prefix="/p", tags=["post_get"])
 

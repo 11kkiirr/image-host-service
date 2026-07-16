@@ -16,7 +16,7 @@ Base URL: зависит от окружения (например `https://api.
 - `UserCreateSchema`: `{ username: str, email: str, password: str }` (validation: username 3-50, password 8-50)
 - `UserLoginSchema`: `{ email: str, password: str }`
 - `UserProfileReadSchema`: `{ id: int, username?: str, email?: str, is_email_confirmed?: bool, is_banned?: bool, is_moderator?: bool, is_admin?: bool }`
-- `ItemCreateSchema`: `{ owner_id: int, link_hash?: str, title?: str, description?: str, is_global: bool }` (рекомендация: не отправлять `owner_id` с клиента — сервер получает `user_id`)
+- `ItemCreateSchema`: `{ link_hash?: str, title?: str, description?: str, is_global: bool }` (сервер сам ставит `owner_id`, поэтому клиенту не нужно отправлять его)
 - `ItemUpdateSchema`: `{ title?: str, description?: str, is_global?: bool }`
 - `ItemReadSchema`: `{ uuid: UUID, owner_id: int, link_hash: str, title?: str, description?: str, is_global: bool, views: int, likes: int, deleted_at?: str }`
 - `FileReadSchema`: `{ uuid: UUID, creator_id: int, item_id?: UUID, filename: str, content_type: str, size: int, storage_path: str, is_deleted?: bool }`

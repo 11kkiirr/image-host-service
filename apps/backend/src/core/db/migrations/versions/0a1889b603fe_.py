@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: a27fb46a8ce9
+Revision ID: 0a1889b603fe
 Revises: 
-Create Date: 2026-07-14 07:26:36.902680
+Create Date: 2026-07-16 12:13:16.677004
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'a27fb46a8ce9'
+revision: str = '0a1889b603fe'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,7 +24,7 @@ def upgrade() -> None:
     op.create_table('items',
     sa.Column('uuid', sa.Uuid(), nullable=False),
     sa.Column('owner_id', sa.BigInteger(), nullable=False),
-    sa.Column('link_hash', sa.String(length=255), nullable=False),
+    sa.Column('link_hash', sa.String(length=255), nullable=True),
     sa.Column('title', sa.String(length=255), nullable=False),
     sa.Column('description', sa.Text(), nullable=True),
     sa.Column('is_global', sa.Boolean(), nullable=False),
@@ -53,7 +53,7 @@ def upgrade() -> None:
     op.create_table('files',
     sa.Column('uuid', sa.Uuid(), nullable=False),
     sa.Column('creator_id', sa.BigInteger(), nullable=False),
-    sa.Column('item_id', sa.Uuid(), nullable=True),
+    sa.Column('item_uuid', sa.Uuid(), nullable=True),
     sa.Column('filename', sa.String(length=255), nullable=False),
     sa.Column('content_type', sa.String(length=255), nullable=False),
     sa.Column('size', sa.BigInteger(), nullable=False),
@@ -61,7 +61,7 @@ def upgrade() -> None:
     sa.Column('is_deleted', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.ForeignKeyConstraint(['item_id'], ['items.uuid'], ),
+    sa.ForeignKeyConstraint(['item_uuid'], ['items.uuid'], ),
     sa.PrimaryKeyConstraint('uuid')
     )
     # ### end Alembic commands ###

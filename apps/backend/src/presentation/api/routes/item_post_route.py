@@ -18,7 +18,7 @@ async def create_item(
 ):
     service = ItemCreateService(uow)
     try:
-        new_item = service.create_item(item_data, user_id)
+        new_item = await service.create_item(item_data, user_id)
         return new_item
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -32,7 +32,7 @@ async def update_item(
 ):
     service = ItemCreateService(uow)
     try:
-        updated_item = service.update_item(item_uuid, item_data, user_id)
+        updated_item = await service.update_item(item_uuid, item_data, user_id)
         return updated_item
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -45,7 +45,7 @@ async def create_link(
 ):
     service = ItemCreateService(uow)
     try:
-        updated_item = service.create_link(item_uuid, user_id)
+        updated_item = await service.create_link(item_uuid, user_id)
         return updated_item
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

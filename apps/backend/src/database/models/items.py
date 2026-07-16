@@ -13,7 +13,7 @@ class ItemModel(Base, TimestampMixin):
 
     uuid: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     owner_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    link_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    link_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
