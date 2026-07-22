@@ -62,3 +62,15 @@ class ItemCreateService:
             )
             
             return updated_item
+    
+    async def delete_item(self, item_uuid: UUID, user_id: int) -> None:
+        async with self.uow as uow:
+            item_model = await uow.items.get_by_id(item_uuid)
+            
+            if not item_model:
+                raise HTTPException(status_code=404, detail="Item not found")
+            
+            if item_model.owner_id != user_id:
+                raise HTTPException(status_code=403, detail="Not authorized to delete this item")
+            
+            await uow.items.delete(item_uuid)

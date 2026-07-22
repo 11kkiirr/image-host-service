@@ -1,178 +1,549 @@
-# API документация — image-host-service
+# API Documentation
 
-Документация предназначена для фронтенд-разработчика: описывает эндпоинты, форматы запросов/ответов, требования по аутентификации и примеры запросов.
+## Общая информация
 
-Base URL: зависит от окружения (например `https://api.example.com` или `http://localhost:8000`).
+Этот сервис реализован на FastAPI и предоставляет API для регистрации пользователей, авторизации, работы с профилем, загрузки файлов и управления постами/элементами.
 
-## Аутентификация
-- Метод: cookie-based auth.
-- При успешном `POST /auth/login` сервер устанавливает httpOnly cookie `access_token` со значением `Bearer <token>`.
-- Для всех защищённых запросов фронтенду нужно отправлять запросы с `credentials: 'include'` (в fetch/axios) или передавать cookie в curl/постман.
-- Cookie флаги (dev): `httponly`, `samesite='lax'`, `secure=False`. На продакшене `secure=True` и HTTPS обязательно.
+Базовый префикс API определяется маршрутами приложения и доступен по адресу:
 
-> Важно: фронтенд не должен пытаться читать / модифицировать `access_token` (httponly).
+- http://localhost:8000 (по умолчанию, если запускать приложение локально)
 
-## Основные Pydantic-схемы (кратко)
-- `UserCreateSchema`: `{ username: str, email: str, password: str }` (validation: username 3-50, password 8-50)
-- `UserLoginSchema`: `{ email: str, password: str }`
-- `UserProfileReadSchema`: `{ id: int, username?: str, email?: str, is_email_confirmed?: bool, is_banned?: bool, is_moderator?: bool, is_admin?: bool }`
-- `ItemCreateSchema`: `{ link_hash?: str, title?: str, description?: str, is_global: bool }` (сервер сам ставит `owner_id`, поэтому клиенту не нужно отправлять его)
-- `ItemUpdateSchema`: `{ title?: str, description?: str, is_global?: bool }`
-- `ItemReadSchema`: `{ uuid: UUID, owner_id: int, link_hash: str, title?: str, description?: str, is_global: bool, views: int, likes: int, deleted_at?: str }`
-- `FileReadSchema`: `{ uuid: UUID, creator_id: int, item_id?: UUID, filename: str, content_type: str, size: int, storage_path: str, is_deleted?: bool }`
+### Основные особенности
 
-## Конкретные эндпоинты
-
-1) GET /
-   - Описание: отдаёт `static/index.html` (UI).
-   - Auth: нет
-
-2) POST /auth/register
-   - Auth: нет
-   - Body (JSON): `UserCreateSchema`
-   - Успех: `200` {
-       "message": "User registered successfully",
-       "user_id": <int>
-     }
-   - Ошибки: 400 / валидация
-
-3) POST /auth/login
-   - Auth: нет
-   - Body (JSON): `UserLoginSchema`
-   - Успех: `200` { "message": "Успешный вход" } + cookie `access_token` устанавливается
-   - Ошибки: `401` при неверных данных
-
-4) GET /profile/me
-   - Auth: требуется (cookie)
-   - Response: `UserProfileReadSchema`
-   - Ошибки: `404` если пользователь не найден
-
-5) POST /file/upload
-   - Auth: требуется
-   - Body: `multipart/form-data` — поля `uploaded_files` (или `files`) как массив файлов
-   - Response: `200` {
-       "message": "Files uploaded successfully.",
-       "files": [ FileReadSchema, ... ]
-     }
-   - Ошибки: `400` если файлы отсутствуют
-
-6) GET /file/{content_uuid}
-   - Auth: по коду не требуется (зависит от сервиса)
-   - Path param: `content_uuid` (UUID/str)
-   - Response: бинарный файл (FileResponse) с заголовком для скачивания
-
-7) GET /p/u/{item_uuid}
-   - Auth: нет
-   - Path param: `item_uuid` (UUID)
-   - Response: `ItemReadSchema`
-
-8) GET /p/h/{link_hash}
-   - Auth: нет
-   - Path param: `link_hash`
-   - Response: `ItemReadSchema`
-
-9) GET /p/my_posts
-   - Auth: требуется
-   - Response: список `ItemReadSchema`
-
-10) POST /post/create_new
-    - Auth: требуется
-    - Body (JSON): `ItemCreateSchema` (лучше не отправлять `owner_id` с клиента)
-    - Response: созданный объект (предположительно `ItemReadSchema`)
-
-11) POST /post/update
-    - Auth: требуется
-    - Query param: `item_uuid` (пример: `/post/update?item_uuid=<UUID>`) — в коде параметр объявлен как обычный аргумент, поэтому FastAPI ожидает query parameter
-    - Body (JSON): `ItemUpdateSchema`
-    - Response: обновлённый объект
-
-12) POST /post/create_link
-    - Auth: требуется
-    - Query param: `item_uuid`
-    - Body: пустой
-    - Response: объект с заполненным `link_hash`
-
-## Примеры запросов (frontend)
-
-Login (fetch):
-
-```javascript
-fetch('/auth/login', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ email: 'ivan@example.com', password: 'securepass' }),
-  credentials: 'include'
-})
-```
-
-Get profile:
-
-```javascript
-fetch('/profile/me', { method: 'GET', credentials: 'include' })
-  .then(r => r.json())
-  .then(data => console.log(data));
-```
-
-Upload files (fetch):
-
-```javascript
-const fd = new FormData();
-fd.append('uploaded_files', fileInput.files[0]);
-fd.append('uploaded_files', fileInput.files[1]);
-fetch('/file/upload', { method: 'POST', body: fd, credentials: 'include' })
-  .then(r => r.json())
-  .then(data => console.log(data));
-```
-
-Create post:
-
-```javascript
-fetch('/post/create_new', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ title: 'Привет', description: 'Описание', is_global: false }),
-  credentials: 'include'
-})
-```
-
-Update post (query param):
-
-```javascript
-fetch('/post/update?item_uuid=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ title: 'Новый заголовок' }),
-  credentials: 'include'
-})
-```
-
-Download file (browser):
-
-```javascript
-fetch('/file/CONTENT_UUID')
-  .then(res => res.blob())
-  .then(blob => {
-    // показать или сохранить
-  })
-```
-
-Curl example (upload, using cookie file):
-
-```bash
-curl -v -X POST "https://api.example.com/file/upload" -b cookies.txt \
-  -F "uploaded_files=@/path/to/img1.jpg" -F "uploaded_files=@/path/to/img2.png"
-```
-
-## Замечания и рекомендации
-- Все защищённые запросы: `credentials: 'include'`.
-- Не читать httponly cookie с клиента.
-- `item_uuid` в некоторых `POST`-маршрутах передаётся как query-параметр.
-- При создании поста лучше не передавать `owner_id` — сервер использует `user_id` из сессии.
-- Проверять размер/тип файлов на клиенте перед отправкой (сервер принимает `UploadFile`).
-
-## Где смотреть исходники
-- Роуты: `apps/backend/src/presentation/api/routes/` (auth_route.py, profile_route.py, content_route.py, item_get_route.py, item_post_route.py, main_route.py)
-- Схемы: `apps/backend/src/database/schemas/` (users.py, items.py, files.py)
+- Авторизация выполняется через JWT-токен, который передаётся в cookie `access_token`.
+- Для защищённых маршрутов используется зависимость `get_current_user`.
+- Загрузка файлов работает через `multipart/form-data`.
+- Для работы с постами и файлами используются модели SQLAlchemy и Pydantic-схемы.
 
 ---
-Если нужно, могу дополнительно сгенерировать Postman-коллекцию или готовые React-хуки для каждого эндпоинта.
+
+## 1. Авторизация и аутентификация
+
+### 1.1 Регистрация пользователя
+
+- Метод: `POST`
+- Путь: `/auth/register`
+- Доступ: публичный
+
+#### Входные данные
+
+Тело запроса должно содержать JSON следующего вида:
+
+```json
+{
+  "username": "alice",
+  "email": "alice@example.com",
+  "password": "strongpassword"
+}
+```
+
+#### Схема
+
+```json
+UserCreateSchema
+{
+  "username": "string",
+  "email": "string (email)",
+  "password": "string"
+}
+```
+
+#### Поведение
+
+- Проверяется, что пользователь с таким email ещё не существует.
+- Пароль хешируется.
+- Создаётся запись в таблице `users`.
+
+#### Ответ
+
+```json
+{
+  "message": "User registered successfully",
+  "user_id": 1
+}
+```
+
+#### Возможные ошибки
+
+- `400` — email уже зарегистрирован.
+
+---
+
+### 1.2 Вход в систему
+
+- Метод: `POST`
+- Путь: `/auth/login`
+- Доступ: публичный
+
+#### Входные данные
+
+```json
+{
+  "email": "alice@example.com",
+  "password": "strongpassword"
+}
+```
+
+#### Схема
+
+```json
+UserLoginSchema
+{
+  "email": "string (email)",
+  "password": "string"
+}
+```
+
+#### Поведение
+
+- Проверяется email и пароль.
+- При успешной аутентификации создаётся JWT-токен.
+- Токен сохраняется в cookie `access_token` с флагом `HttpOnly`.
+
+#### Ответ
+
+```json
+{
+  "message": "Успешный вход"
+}
+```
+
+#### Возможные ошибки
+
+- `401` — неверный email или пароль.
+
+---
+
+### 1.3 Авторизация через cookie
+
+Защищённые маршруты используют зависимость `get_current_user`.
+
+#### Как работает
+
+1. Клиент отправляет cookie `access_token`.
+2. Из cookie извлекается токен.
+3. Токен декодируется с помощью JWT.
+4. Из payload берётся значение `sub`, которое трактуется как `user_id`.
+5. Этот `user_id` передаётся в handler как зависимость.
+
+#### Формат токена
+
+Токен создаётся как JWT с payload, включающим:
+
+```json
+{
+  "sub": "1",
+  "exp": 1712345678,
+  "type": "access"
+}
+```
+
+#### Ошибки авторизации
+
+- `401` — токен отсутствует.
+- `401` — токен истёк или был изменён.
+- `401` — `sub` отсутствует или имеет неверный формат.
+
+---
+
+## 2. Профиль пользователя
+
+### 2.1 Получить информацию о текущем пользователе
+
+- Метод: `GET`
+- Путь: `/profile/me`
+- Доступ: защищённый
+
+#### Поведение
+
+- Из зависимость `get_current_user` берётся идентификатор текущего пользователя.
+- По этому идентификатору ищется пользователь.
+
+#### Ответ
+
+```json
+{
+  "id": 1,
+  "username": "alice",
+  "email": "alice@example.com",
+  "is_email_confirmed": false,
+  "is_banned": false,
+  "is_moderator": false,
+  "is_admin": false
+}
+```
+
+#### Возможные ошибки
+
+- `401` — пользователь не авторизован.
+- `404` — пользователь не найден.
+
+---
+
+## 3. Работа с файлами
+
+### 3.1 Загрузка файлов
+
+- Метод: `POST`
+- Путь: `/file/upload`
+- Доступ: защищённый
+- Формат: `multipart/form-data`
+
+#### Параметры
+
+- `files` или `uploaded_files` — один или несколько файлов.
+- `item_uuid` — необязательный UUID элемента, к которому привязывается файл.
+
+#### Поведение
+
+- Принимаются файлы с типом `image/jpeg`, `image/png`, `image/webp`.
+- Максимальный размер файла — 5 МБ.
+- Каждый файл сохраняется в папку `uploads/`.
+- Для файла создаётся запись в таблице `files`.
+
+#### Ответ
+
+```json
+{
+  "message": "Files uploaded successfully.",
+  "files": [
+    {
+      "uuid": "...",
+      "creator_id": 1,
+      "filename": "photo.png",
+      "content_type": "image/png",
+      "size": 12345,
+      "storage_path": "uploads/...",
+      "is_deleted": false
+    }
+  ]
+}
+```
+
+#### Возможные ошибки
+
+- `400` — не передан ни один файл.
+- `401` — пользователь не авторизован.
+
+---
+
+### 3.2 Скачать файл
+
+- Метод: `GET`
+- Путь: `/file/{content_uuid}`
+- Доступ: публичный
+
+#### Поведение
+
+- По UUID файла ищется метаданные в базе.
+- Возвращается файл как `FileResponse`.
+
+#### Ответ
+
+- Возвращает файл как бинарный ответ.
+
+#### Возможные ошибки
+
+- `404` — файл не найден.
+
+---
+
+## 4. Работа с постами/элементами
+
+### 4.1 Создание нового поста
+
+- Метод: `POST`
+- Путь: `/post/create_new`
+- Доступ: защищённый
+
+#### Входные данные
+
+```json
+{
+  "title": "Мой первый пост",
+  "description": "Описание поста",
+  "is_global": false
+}
+```
+
+#### Схема
+
+```json
+ItemCreateSchema
+{
+  "link_hash": "string | null",
+  "title": "string | null",
+  "description": "string | null",
+  "is_global": false
+}
+```
+
+#### Поведение
+
+- Создаётся новый элемент с `owner_id`, равным идентификатору текущего пользователя.
+- `uuid` генерируется автоматически.
+
+#### Ответ
+
+Возвращается объект элемента (модель `ItemModel`).
+
+#### Возможные ошибки
+
+- `401` — пользователь не авторизован.
+- `400` — ошибка при создании.
+
+---
+
+### 4.2 Обновление поста
+
+- Метод: `POST`
+- Путь: `/post/update`
+- Доступ: защищённый
+
+#### Параметры
+
+- `item_uuid` — UUID элемента в query-параметре.
+
+#### Входные данные
+
+```json
+{
+  "title": "Новое название",
+  "description": "Новое описание",
+  "is_global": true
+}
+```
+
+#### Схема
+
+```json
+ItemUpdateSchema
+{
+  "title": "string | null",
+  "description": "string | null",
+  "is_global": "boolean | null"
+}
+```
+
+#### Поведение
+
+- Проверяется, что элемент существует.
+- Проверяется, что текущий пользователь является владельцем элемента.
+- Обновляются поля элемента.
+
+#### Возможные ошибки
+
+- `401` — пользователь не авторизован.
+- `403` — пользователь не имеет прав обновлять этот элемент.
+- `404` — элемент не найден.
+- `400` — ошибка обновления.
+
+---
+
+### 4.3 Создание ссылки на пост
+
+- Метод: `POST`
+- Путь: `/post/create_link`
+- Доступ: защищённый
+
+#### Параметры
+
+- `item_uuid` — UUID элемента в query-параметре.
+
+#### Поведение
+
+- Проверяется, что элемент существует.
+- Проверяется, что текущий пользователь является владельцем.
+- Генерируется уникальный `link_hash` и сохраняется в элементе.
+
+#### Ответ
+
+Возвращается обновлённый элемент с новым `link_hash`.
+
+#### Возможные ошибки
+
+- `401` — пользователь не авторизован.
+- `403` — у пользователя нет прав для создания ссылки.
+- `404` — элемент не найден.
+- `400` — ошибка создания ссылки.
+
+---
+
+### 4.4 Получить элемент по UUID
+
+- Метод: `GET`
+- Путь: `/p/u/{item_uuid}`
+- Доступ: публичный
+
+#### Поведение
+
+- Ищет элемент по UUID.
+- Возвращает объект поста.
+
+#### Возможные ошибки
+
+- `404` — элемент не найден.
+- `400` — ошибка запроса.
+
+---
+
+### 4.5 Получить элемент по hash-ссылке
+
+- Метод: `GET`
+- Путь: `/p/h/{link_hash}`
+- Доступ: публичный
+
+#### Поведение
+
+- Ищет элемент по полю `link_hash`.
+
+#### Возможные ошибки
+
+- `404` — элемент не найден.
+- `400` — ошибка запроса.
+
+---
+
+### 4.6 Получить свои посты
+
+- Метод: `GET`
+- Путь: `/p/my_posts`
+- Доступ: защищённый
+
+#### Поведение
+
+- Возвращает все элементы, принадлежащие текущему пользователю.
+
+#### Возможные ошибки
+
+- `401` — пользователь не авторизован.
+- `400` — ошибка запроса.
+
+---
+
+## 5. Модели данных
+
+### 5.1 UserModel
+
+Модель пользователя в базе данных.
+
+#### Поля
+
+- `id: int` — первичный ключ.
+- `username: str | None` — имя пользователя.
+- `email: str` — email, уникальный.
+- `pass_hash: str` — хеш пароля.
+- `is_banned: bool` — забанен ли пользователь.
+- `is_deleted: bool` — удалён ли пользователь.
+- `is_moderator: bool` — модератор.
+- `is_admin: bool` — администратор.
+- `is_email_confirmed: bool` — подтверждён ли email.
+
+#### Схемы
+
+- `UserCreateSchema` — для регистрации.
+- `UserLoginSchema` — для входа.
+- `UserProfileReadSchema` — для профиля пользователя.
+- `UserReadSchema` — полное представление пользователя.
+
+---
+
+### 5.2 ItemModel
+
+Модель элемента/поста.
+
+#### Поля
+
+- `uuid: UUID` — уникальный идентификатор.
+- `owner_id: int` — владелец поста.
+- `link_hash: str | None` — случайный hash для публичной ссылки.
+- `title: str | None` — название поста.
+- `description: str | None` — описание.
+- `is_global: bool` — глобальный ли пост.
+- `views: int` — количество просмотров.
+- `likes: int` — количество лайков.
+- `deleted_at: datetime | None` — время удаления.
+
+#### Схемы
+
+- `ItemCreateSchema` — создание.
+- `ItemUpdateSchema` — обновление.
+
+---
+
+### 5.3 FileModel
+
+Модель файла.
+
+#### Поля
+
+- `uuid: UUID` — идентификатор файла.
+- `creator_id: int` — владелец файла.
+- `item_uuid: UUID | None` — привязка к элементу.
+- `filename: str` — имя файла.
+- `content_type: str` — MIME-тип.
+- `size: int` — размер в байтах.
+- `storage_path: str` — путь к файлу в файловой системе.
+- `is_deleted: bool` — удалён ли файл.
+
+#### Схемы
+
+- `FileReadSchema` — представление файла.
+- `FileCreateSchema` — создание файла.
+- `FileUpdateSchema` — обновление.
+
+---
+
+## 6. Примеры запросов
+
+### Регистрация
+
+```bash
+curl -X POST http://localhost:8000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"alice","email":"alice@example.com","password":"strongpassword"}'
+```
+
+### Вход
+
+```bash
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"alice@example.com","password":"strongpassword"}' \
+  -c cookies.txt
+```
+
+### Получение профиля
+
+```bash
+curl -X GET http://localhost:8000/profile/me \
+  -b cookies.txt
+```
+
+### Загрузка файла
+
+```bash
+curl -X POST http://localhost:8000/file/upload \
+  -b cookies.txt \
+  -F "files=@/path/to/photo.png"
+```
+
+---
+
+## 7. Текущие ограничения и заметки
+
+- Авторизация реализована только через cookie и JWT; refresh-токены в текущей реализации отсутствуют.
+- Для загрузки файлов разрешены только изображения.
+- Файлы сохраняются локально в папке `uploads/`.
+- У некоторых маршрутов ошибки возвращаются как общие `HTTPException` с текстом сообщения.
+- В текущей реализации часть ответов возвращает ORM-модели напрямую, а не Pydantic-схемы.
+
+---
+
+## 8. Краткое резюме по структуре API
+
+- `/auth/*` — регистрация и логин.
+- `/profile/*` — профиль пользователя.
+- `/file/*` — загрузка и скачивание файлов.
+- `/post/*` — создание, обновление и генерация ссылок для элементов.
+- `/p/*` — публичный доступ к элементам по UUID или hash.

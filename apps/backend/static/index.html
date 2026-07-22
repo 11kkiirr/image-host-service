@@ -1,378 +1,910 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Markdown Platform</title>
-    <!-- Библиотека для парсинга Markdown -->
-    <script src="[https://cdn.jsdelivr.net/npm/marked/marked.min.js](https://cdn.jsdelivr.net/npm/marked/marked.min.js)"></script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Markdown Image Host</title>
     <style>
-        /* Базовые стили в стиле темной темы GitHub */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; background-color: #0d1117; color: #c9d1d9; }
-        .card { border: 1px solid #30363d; padding: 25px; border-radius: 6px; background-color: #161b22; margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; }
-        input[type="text"], input[type="password"], input[type="email"], textarea { 
-            width: 100%; padding: 10px; border: 1px solid #30363d; border-radius: 6px; background: #0d1117; color: #c9d1d9; box-sizing: border-box; font-family: inherit;
-        }
-        textarea { resize: vertical; min-height: 300px; font-family: 'Courier New', Courier, monospace; }
-        button { background: #238636; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s; }
-        button:hover { background: #2ea043; }
-        .btn-alt { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; }
-        .btn-alt:hover { background: #30363d; }
-        .hidden { display: none !important; } /* Важно для системы роутинга */
-        .toggle-link { text-align: center; margin-top: 15px; font-size: 14px; color: #58a6ff; cursor: pointer; }
-        
-        /* Стили для предпросмотра */
-        .editor-container { display: flex; gap: 20px; flex-direction: column; }
-        #preview { border: 1px dashed #30363d; padding: 15px; border-radius: 6px; background: #0d1117; min-height: 300px; }
-        #preview img { max-width: 100%; border-radius: 6px; }
-        #preview h1, #preview h2 { border-bottom: 1px solid #21262d; padding-bottom: 5px; }
-        .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+      :root {
+        color-scheme: dark;
+        --bg: #0f172a;
+        --panel: #111827;
+        --panel-2: #1f2937;
+        --border: #334155;
+        --text: #f8fafc;
+        --muted: #94a3b8;
+        --accent: #38bdf8;
+        --accent-2: #818cf8;
+        --danger: #f87171;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: linear-gradient(135deg, var(--bg), #111827 60%, #020617);
+        color: var(--text);
+      }
+
+      .page { display: none; }
+      .page.active { display: flex; }
+
+      .page {
+        min-height: 100vh;
+        flex-direction: column;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        width: 100%;
+        padding: 24px;
+      }
+
+      .card {
+        background: rgba(17, 24, 39, 0.95);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 12px 40px rgba(2, 6, 23, 0.35);
+        padding: 32px;
+      }
+
+      .card.small {
+        max-width: 480px;
+        margin: 40px auto;
+        padding: 24px;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 1.8rem;
+      }
+
+      .header p {
+        margin: 4px 0 0;
+        color: var(--muted);
+      }
+
+      .topbar-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .btn {
+        border: none;
+        border-radius: 10px;
+        padding: 10px 14px;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+
+      .btn:hover { opacity: 0.9; }
+
+      .btn.secondary {
+        background: var(--panel-2);
+        color: var(--text);
+        border: 1px solid var(--border);
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+
+      .form-group input, .form-group textarea {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+        background: var(--panel-2);
+        color: var(--text);
+        font: inherit;
+      }
+
+      .form-group textarea {
+        resize: vertical;
+        min-height: 120px;
+      }
+
+      .auth-switch {
+        text-align: center;
+        margin-top: 16px;
+        color: var(--muted);
+      }
+
+      .auth-switch button {
+        background: none;
+        border: none;
+        color: var(--accent);
+        cursor: pointer;
+        text-decoration: underline;
+        font-size: inherit;
+      }
+
+      .status {
+        padding: 12px;
+        border-radius: 10px;
+        margin-bottom: 16px;
+        display: none;
+      }
+
+      .status.show { display: block; }
+      .status.good { background: rgba(134, 239, 172, 0.15); color: #86efac; }
+      .status.bad { background: rgba(248, 113, 113, 0.15); color: var(--danger); }
+      .status.info { background: rgba(56, 189, 248, 0.15); color: var(--accent); }
+
+      .posts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .post-card {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .post-card:hover {
+        border-color: var(--accent);
+        box-shadow: 0 4px 12px rgba(56, 189, 248, 0.15);
+      }
+
+      .post-card h3 {
+        margin: 0 0 8px;
+        font-size: 1.1rem;
+      }
+
+      .post-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.4;
+      }
+
+      .profile-header {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 24px;
+        margin-bottom: 24px;
+      }
+
+      .profile-info h2 {
+        margin: 0 0 8px;
+      }
+
+      .profile-info p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .editor-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+        flex: 1;
+      }
+
+      .editor-panel {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+
+      .editor-panel h3 {
+        margin: 0 0 8px;
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+
+      .editor-input {
+        flex: 1;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+        background: #020617;
+        color: var(--text);
+        font: 14px/1.6 Consolas, monospace;
+        resize: none;
+        min-height: 420px;
+      }
+
+      .preview {
+        overflow: auto;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(2, 6, 23, 0.55);
+        min-height: 420px;
+      }
+
+      .preview h1, .preview h2, .preview h3 { margin-top: 0.5em; }
+      .preview img { max-width: 100%; border-radius: 10px; margin: 10px 0; }
+      .preview code { background: rgba(56, 189, 248, 0.18); padding: 2px 4px; border-radius: 6px; }
+      .preview pre { background: #020617; padding: 12px; border-radius: 10px; overflow: auto; }
+      .preview blockquote { border-left: 3px solid var(--accent); padding-left: 10px; color: var(--muted); }
+      .preview ul, .preview ol { padding-left: 20px; }
+
+      .editor-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .editor-toolbar input[type="text"] {
+        flex: 1;
+        min-width: 200px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 12px;
+        background: var(--panel-2);
+        color: var(--text);
+      }
+
+      .editor-toolbar label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--muted);
+      }
+
+      .editor-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .share-link {
+        color: var(--accent);
+        word-break: break-all;
+        font-size: 0.95rem;
+        margin-top: 8px;
+      }
+
+      .drop-hint {
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin-top: 8px;
+      }
+
+      @media (max-width: 960px) {
+        .editor-layout { grid-template-columns: 1fr; }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
+    <!-- AUTH PAGE -->
+    <div class="page active" id="authPage">
+      <div class="container">
+        <div class="card small">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <h1>Markdown Image Host</h1>
+            <p style="color: var(--muted);">Пиши, вставляй картинки, делись</p>
+          </div>
 
-    <!-- ================= ВИД 1: АВТОРИЗАЦИЯ ================= -->
-    <div id="view-auth" class="card">
-        <h2 id="authTitle">Вход в систему</h2>
-        <form id="authForm">
-            <div class="form-group hidden" id="usernameGroup">
-                <label>Имя пользователя:</label>
-                <input type="text" id="username">
-            </div>
-            <div class="form-group">
-                <label>Email:</label>
-                <input type="email" id="email" required>
-            </div>
-            <div class="form-group">
-                <label>Пароль:</label>
-                <input type="password" id="password" required>
-            </div>
-            <button type="submit" id="submitBtn">Войти</button>
-        </form>
-        <div id="toggleAuth" class="toggle-link">Нет аккаунта? Зарегистрироваться</div>
-        <div id="authResult" style="margin-top: 15px; text-align: center;"></div>
-    </div>
+          <div id="authStatus" class="status"></div>
 
-    <!-- ================= ВИД 2: ПАНЕЛЬ УПРАВЛЕНИЯ ================= -->
-    <div id="view-dashboard" class="card hidden">
-        <h2>Добро пожаловать!</h2>
-        <p>Вы успешно авторизованы. Что будем делать?</p>
-        <button onclick="startNewPost()">📝 Создать новый пост</button>
-        <button class="btn-alt" onclick="logout()" style="margin-top: 10px;">🚪 Выйти</button>
-    </div>
+          <div id="authForms"></div>
 
-    <!-- ================= ВИД 3: РЕДАКТОР ПОСТА ================= -->
-    <div id="view-editor" class="card hidden">
-        <div class="status-bar">
-            <h2>Редактор поста</h2>
-            <span id="saveStatus" style="font-size: 14px; font-weight: bold; color: #8b949e;"></span>
+          <div class="auth-switch">
+            <span id="authSwitchText">Нет аккаунта?</span>
+            <button id="authSwitchBtn" onclick="app.toggleAuthMode()">Создать</button>
+          </div>
         </div>
-        
-        <form id="postForm">
-            <div class="form-group">
-                <input type="text" id="postTitle" required placeholder="Заголовок поста..." style="font-size: 18px; font-weight: bold;">
-            </div>
-            
-            <div class="editor-container">
-                <div class="form-group" style="margin-bottom: 0;">
-                    <textarea id="postContent" placeholder="Пишите текст здесь... (Поддерживается Markdown и вставка картинок Ctrl+V)"></textarea>
-                </div>
-                <div>
-                    <h3>Предпросмотр:</h3>
-                    <div id="preview"></div>
-                </div>
-            </div>
+      </div>
+    </div>
 
-            <div class="form-group" style="margin-top: 15px;">
-                <label>
-                    <input type="checkbox" id="isGlobal" checked> Публичный пост (доступен всем)
-                </label>
-            </div>
+    <!-- DASHBOARD PAGE -->
+    <div class="page" id="dashboardPage">
+      <div class="container" style="flex: 1; display: flex; flex-direction: column;">
+        <div class="header">
+          <div>
+            <h1>Мои посты</h1>
+            <p id="userEmail" style="color: var(--muted);"></p>
+          </div>
+          <div class="topbar-actions">
+            <button class="btn" onclick="app.goToEditor()">Новый пост</button>
+            <button class="btn secondary" onclick="app.logout()">Выйти</button>
+          </div>
+        </div>
 
-            <button type="submit">🚀 Опубликовать пост</button>
-            <button type="button" class="btn-alt" onclick="cancelPost()" style="margin-top: 10px;">❌ Отменить и вернуться</button>
-        </form>
-        
-        <div id="postResult" style="margin-top: 15px; text-align: center; font-weight: bold;"></div>
+        <div class="profile-header">
+          <div class="profile-info">
+            <h2 id="profileUsername">Профиль</h2>
+            <p id="profileEmail"></p>
+          </div>
+        </div>
+
+        <div id="postsList" class="posts-grid"></div>
+      </div>
+    </div>
+
+    <!-- EDITOR PAGE -->
+    <div class="page" id="editorPage">
+      <div class="container" style="flex: 1; display: flex; flex-direction: column;">
+        <div class="header">
+          <div>
+            <h1 id="editorTitle">Создать пост</h1>
+          </div>
+          <div class="topbar-actions">
+            <button class="btn secondary" onclick="app.goToDashboard()">К постам</button>
+          </div>
+        </div>
+
+        <div id="editorStatus" class="status"></div>
+
+        <div class="editor-toolbar">
+          <input id="postTitle" type="text" placeholder="Заголовок поста" />
+          <label><input id="postGlobal" type="checkbox" /> Публичный</label>
+          <button id="shareBtn" class="btn secondary" onclick="app.createShareLink()">Создать ссылку</button>
+          <button id="uploadBtn" class="btn secondary" onclick="document.getElementById('imageInput').click()">Загрузить картинку</button>
+          <input id="imageInput" type="file" multiple hidden accept="image/*" />
+        </div>
+
+        <div id="shareLink" class="share-link"></div>
+
+        <div class="editor-layout">
+          <div class="editor-panel">
+            <h3>Markdown</h3>
+            <textarea id="postContent" class="editor-input" placeholder="Начните писать пост..."></textarea>
+            <div class="drop-hint">💡 Перетащите картинку сюда, и она вставится в место курсора.</div>
+          </div>
+          <div class="editor-panel">
+            <h3>Предпросмотр</h3>
+            <div id="preview" class="preview"></div>
+          </div>
+        </div>
+
+        <div class="editor-actions">
+          <button class="btn" onclick="app.backToDashboard()">Сохранить и вернуться</button>
+          <button class="btn secondary" id="deleteBtn" onclick="app.confirmDelete()" style="display: none;">Удалить пост</button>
+        </div>
+      </div>
     </div>
 
     <script>
-        // ================= SPA РОУТИНГ =================
-        function showView(viewId) {
-            document.getElementById('view-auth').classList.add('hidden');
-            document.getElementById('view-dashboard').classList.add('hidden');
-            document.getElementById('view-editor').classList.add('hidden');
-            document.getElementById(viewId).classList.remove('hidden');
+      const app = (() => {
+        const state = {
+          user: null,
+          authMode: "login",
+          currentPost: null,
+          posts: [],
+          saveTimer: null,
+          createPromise: null,
+        };
+
+        const pages = {
+          auth: document.getElementById("authPage"),
+          dashboard: document.getElementById("dashboardPage"),
+          editor: document.getElementById("editorPage"),
+        };
+
+        function goToPage(pageName) {
+          Object.values(pages).forEach(p => p.classList.remove("active"));
+          pages[pageName].classList.add("active");
         }
 
-        // Простая проверка авторизации при загрузке страницы
-        // Попытаемся получить профиль. Если кука жива - пустит в дашборд
-        async function checkAuthStatus() {
-            try {
-                const res = await fetch('/profile/me', { credentials: 'include' });
-                if (res.ok) {
-                    showView('view-dashboard');
-                } else {
-                    showView('view-auth');
-                }
-            } catch (err) {
-                showView('view-auth');
-            }
-        }
-        checkAuthStatus(); // Вызываем при загрузке
-
-        // ================= ЛОГИКА АВТОРИЗАЦИИ =================
-        let isLoginMode = true;
-        document.getElementById('toggleAuth').addEventListener('click', () => {
-            isLoginMode = !isLoginMode;
-            document.getElementById('authTitle').innerText = isLoginMode ? 'Вход в систему' : 'Регистрация';
-            document.getElementById('submitBtn').innerText = isLoginMode ? 'Войти' : 'Зарегистрироваться';
-            document.getElementById('toggleAuth').innerText = isLoginMode ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти';
-            document.getElementById('usernameGroup').classList.toggle('hidden', isLoginMode);
-            document.getElementById('username').required = !isLoginMode;
-        });
-
-        document.getElementById('authForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const payload = { email, password };
-            if (!isLoginMode) payload.username = document.getElementById('username').value;
-
-            const endpoint = isLoginMode ? '/auth/login' : '/auth/register';
-
-            try {
-                const res = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                    credentials: 'include'
-                });
-                
-                if (res.ok) {
-                    if (isLoginMode) {
-                        showView('view-dashboard');
-                    } else {
-                        document.getElementById('toggleAuth').click();
-                        alert('Успешная регистрация! Теперь войдите.');
-                    }
-                } else {
-                    const data = await res.json();
-                    document.getElementById('authResult').innerText = data.detail || 'Ошибка';
-                    document.getElementById('authResult').style.color = 'red';
-                }
-            } catch (err) {
-                console.error(err);
-            }
-        });
-
-        function logout() {
-            // В идеале тут должен быть fetch на /auth/logout, если он есть. 
-            // Пока просто перезагружаем страницу, куки очистятся если закрыть браузер, или мы можем удалять их с сервера.
-            location.reload(); 
+        function getCookie(name) {
+          const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+          return match ? decodeURIComponent(match[1]) : null;
         }
 
-        // ================= ЛОГИКА РЕДАКТОРА (DRAFT-FIRST) =================
-        let currentPostUuid = null;
-        let autoSaveTimeout = null;
-        
-        const titleInput = document.getElementById('postTitle');
-        const contentInput = document.getElementById('postContent');
-        const isGlobalInput = document.getElementById('isGlobal');
-        const saveStatus = document.getElementById('saveStatus');
-        const previewDiv = document.getElementById('preview');
-
-        // Шаг 1: Создание черновика
-        async function startNewPost() {
-            try {
-                // Создаем пустой пост
-                const res = await fetch('/post/create_new', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title: 'Новый пост', description: '', is_global: false }),
-                    credentials: 'include'
-                });
-                
-                const data = await res.json();
-                if (res.ok) {
-                    currentPostUuid = data.uuid;
-                    // Сбрасываем поля
-                    titleInput.value = '';
-                    contentInput.value = '';
-                    isGlobalInput.checked = true;
-                    previewDiv.innerHTML = '';
-                    document.getElementById('postResult').innerHTML = '';
-                    saveStatus.innerText = '';
-                    
-                    showView('view-editor');
-                } else {
-                    alert('Ошибка создания черновика: ' + (data.detail || JSON.stringify(data)));
-                }
-            } catch (err) {
-                alert('Ошибка сети при создании поста');
-            }
+        async function request(path, options = {}) {
+          const res = await fetch(path, { credentials: "include", ...options });
+          const contentType = res.headers.get("content-type") || "";
+          let body = null;
+          if (contentType.includes("application/json")) {
+            body = await res.json();
+          } else {
+            body = await res.text();
+          }
+          if (!res.ok) {
+            const detail = typeof body === "object" && body !== null ? body.detail || body.message || JSON.stringify(body) : body;
+            throw new Error(detail || `Request failed: ${res.status}`);
+          }
+          return body;
         }
 
-        function cancelPost() {
-            if (confirm('Выйти из редактора? (Черновик останется в базе)')) {
-                currentPostUuid = null;
-                showView('view-dashboard');
-            }
+        function setStatus(pageId, message, kind = "info") {
+          const el = document.getElementById(pageId);
+          el.textContent = message;
+          el.className = `status show ${kind}`;
+          setTimeout(() => el.classList.remove("show"), 5000);
         }
 
-        // Шаг 2: Автосохранение
-        async function saveDraft() {
-            if (!currentPostUuid) return;
-
-            saveStatus.innerText = '⏳ Сохранение...';
-            saveStatus.style.color = '#8b949e';
-
-            const payload = {
-                title: titleInput.value || 'Без заголовка',
-                description: contentInput.value,
-                is_global: isGlobalInput.checked
-            };
-
-            try {
-                // Отправляем изменения, передавая item_uuid как query параметр
-                const res = await fetch(`/post/update?item_uuid=${currentPostUuid}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                    credentials: 'include'
-                });
-
-                if (res.ok) {
-                    saveStatus.innerText = '✅ Сохранено';
-                    saveStatus.style.color = '#2ea043';
-                } else {
-                    saveStatus.innerText = '❌ Ошибка';
-                    saveStatus.style.color = 'red';
-                }
-            } catch (err) {
-                saveStatus.innerText = '❌ Нет сети';
-            }
+        function showAuthForms() {
+          const formsContainer = document.getElementById("authForms");
+          if (state.authMode === "login") {
+            formsContainer.innerHTML = `
+              <div class="form-group">
+                <label>Email</label>
+                <input id="loginEmail" type="email" placeholder="your@email.com" />
+              </div>
+              <div class="form-group">
+                <label>Пароль</label>
+                <input id="loginPassword" type="password" />
+              </div>
+              <button class="btn" style="width: 100%;" onclick="app.handleLogin()">Войти</button>
+            `;
+            document.getElementById("authSwitchText").textContent = "Нет аккаунта?";
+            document.getElementById("authSwitchBtn").textContent = "Создать";
+          } else {
+            formsContainer.innerHTML = `
+              <div class="form-group">
+                <label>Имя пользователя</label>
+                <input id="regUsername" type="text" placeholder="Ваше имя" />
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input id="regEmail" type="email" placeholder="your@email.com" />
+              </div>
+              <div class="form-group">
+                <label>Пароль</label>
+                <input id="regPassword" type="password" />
+              </div>
+              <button class="btn" style="width: 100%;" onclick="app.handleRegister()">Зарегистрироваться</button>
+            `;
+            document.getElementById("authSwitchText").textContent = "Уже есть аккаунт?";
+            document.getElementById("authSwitchBtn").textContent = "Войти";
+          }
         }
 
-        function handleInput() {
-            // Обновляем превью
-            previewDiv.innerHTML = marked.parse(contentInput.value);
-            
-            // Debounce для сохранения
-            clearTimeout(autoSaveTimeout);
-            saveStatus.innerText = 'Печатает...';
-            saveStatus.style.color = '#8b949e';
-            
-            autoSaveTimeout = setTimeout(() => {
-                saveDraft();
-            }, 1000);
+        function toggleAuthMode() {
+          state.authMode = state.authMode === "login" ? "register" : "login";
+          showAuthForms();
         }
 
-        titleInput.addEventListener('input', handleInput);
-        contentInput.addEventListener('input', handleInput);
-        isGlobalInput.addEventListener('change', saveDraft);
+        async function handleLogin() {
+          const email = document.getElementById("loginEmail").value.trim();
+          const password = document.getElementById("loginPassword").value;
 
-        // Вставка текста в позицию курсора
-        function insertAtCursor(myField, myValue) {
-            if (myField.selectionStart || myField.selectionStart === '0') {
-                var startPos = myField.selectionStart;
-                var endPos = myField.selectionEnd;
-                myField.value = myField.value.substring(0, startPos) + myValue + myField.value.substring(endPos, myField.value.length);
-                myField.selectionStart = startPos + myValue.length;
-                myField.selectionEnd = startPos + myValue.length;
+          if (!email || !password) {
+            setStatus("authStatus", "Введите email и пароль", "bad");
+            return;
+          }
+
+          try {
+            await request("/auth/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, password }),
+            });
+            state.user = { email };
+            await loadUserProfile();
+            await loadPosts();
+            goToPage("dashboard");
+            setStatus("authStatus", "Добро пожаловать!", "good");
+          } catch (error) {
+            setStatus("authStatus", error.message, "bad");
+          }
+        }
+
+        async function handleRegister() {
+          const username = document.getElementById("regUsername").value.trim();
+          const email = document.getElementById("regEmail").value.trim();
+          const password = document.getElementById("regPassword").value;
+
+          if (!username || !email || !password) {
+            setStatus("authStatus", "Заполните все поля", "bad");
+            return;
+          }
+
+          try {
+            await request("/auth/register", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username, email, password }),
+            });
+            setStatus("authStatus", "Регистрация успешна! Теперь войдите.", "good");
+            state.authMode = "login";
+            showAuthForms();
+          } catch (error) {
+            setStatus("authStatus", error.message, "bad");
+          }
+        }
+
+        async function loadUserProfile() {
+          try {
+            const profile = await request("/profile/me");
+            document.getElementById("userEmail").textContent = profile.email;
+            document.getElementById("profileUsername").textContent = profile.username || "Профиль";
+            document.getElementById("profileEmail").textContent = `Email: ${profile.email}`;
+            state.user = profile;
+          } catch (error) {
+            console.error("Failed to load profile:", error);
+          }
+        }
+
+        async function loadPosts() {
+          try {
+            const posts = await request("/p/my_posts");
+            state.posts = Array.isArray(posts) ? posts : [];
+            renderPosts();
+          } catch (error) {
+            setStatus("dashboardPage", "Ошибка при загрузке постов", "bad");
+          }
+        }
+
+        function renderPosts() {
+          const container = document.getElementById("postsList");
+          if (!state.posts.length) {
+            container.innerHTML = "<p style='color: var(--muted); grid-column: 1/-1;'>Нет постов. Создайте первый!</p>";
+            return;
+          }
+
+          container.innerHTML = state.posts.map(post => `
+            <div class="post-card" onclick="app.editPost('${post.uuid}')">
+              <h3>${escapeHtml(post.title || "Без названия")}</h3>
+              <p>${escapeHtml((post.description || "").slice(0, 100))}</p>
+            </div>
+          `).join("");
+        }
+
+        async function editPost(uuid) {
+          const post = state.posts.find(p => p.uuid === uuid);
+          if (!post) return;
+
+          state.currentPost = post;
+          document.getElementById("editorTitle").textContent = "Редактировать пост";
+          document.getElementById("postTitle").value = post.title || "";
+          document.getElementById("postContent").value = post.description || "";
+          document.getElementById("postGlobal").checked = Boolean(post.is_global);
+          document.getElementById("deleteBtn").style.display = "inline-block";
+          if (post.link_hash) {
+            const link = `${window.location.origin}/p/h/${post.link_hash}`;
+            document.getElementById("shareLink").textContent = link;
+          } else {
+            document.getElementById("shareLink").textContent = "";
+          }
+          renderPreview();
+          goToPage("editor");
+        }
+
+        function goToEditor() {
+          state.currentPost = null;
+          document.getElementById("editorTitle").textContent = "Создать пост";
+          document.getElementById("postTitle").value = "";
+          document.getElementById("postContent").value = "";
+          document.getElementById("postGlobal").checked = false;
+          document.getElementById("shareLink").textContent = "";
+          document.getElementById("deleteBtn").style.display = "none";
+          document.getElementById("editorStatus").classList.remove("show");
+          renderPreview();
+          goToPage("editor");
+        }
+
+        function goToDashboard() {
+          goToPage("dashboard");
+        }
+
+        async function backToDashboard() {
+          await savePost();
+          goToDashboard();
+          await loadPosts();
+        }
+
+        async function savePost() {
+          if (!state.user) return;
+
+          const title = document.getElementById("postTitle").value || null;
+          const description = document.getElementById("postContent").value || null;
+          const is_global = document.getElementById("postGlobal").checked;
+
+          try {
+            if (state.currentPost) {
+              await request(`/post/update?item_uuid=${state.currentPost.uuid}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, description, is_global }),
+              });
+              setStatus("editorStatus", "Пост сохранён", "good");
             } else {
-                myField.value += myValue;
+              if (state.createPromise) return state.createPromise;
+
+              state.createPromise = request("/post/create_new", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, description, is_global }),
+              })
+                .then(async (created) => {
+                  state.currentPost = created;
+                  setStatus("editorStatus", "Пост создан", "good");
+                  return created;
+                })
+                .catch(error => {
+                  setStatus("editorStatus", error.message, "bad");
+                  return null;
+                })
+                .finally(() => {
+                  state.createPromise = null;
+                });
+
+              return state.createPromise;
             }
-            myField.dispatchEvent(new Event('input')); 
+          } catch (error) {
+            setStatus("editorStatus", error.message, "bad");
+          }
         }
 
-        // Шаг 3: Загрузка файлов (С привязкой к item_uuid)
-        async function uploadImage(file) {
-            if (!currentPostUuid) {
-                alert("Сначала дождитесь создания черновика");
-                return;
+        function scheduleSave() {
+          clearTimeout(state.saveTimer);
+          state.saveTimer = setTimeout(savePost, 700);
+        }
+
+        function renderPreview() {
+          const markdown = document.getElementById("postContent").value;
+          document.getElementById("preview").innerHTML = renderMarkdown(markdown);
+        }
+
+        function renderMarkdown(source) {
+          const escaped = escapeHtml(source || "");
+          const lines = escaped.split(/\n/);
+          const html = [];
+          let inCodeBlock = false;
+          let codeBuffer = [];
+
+          const flushCodeBlock = () => {
+            if (!codeBuffer.length) return;
+            html.push(`<pre><code>${codeBuffer.join("\n")}</code></pre>`);
+            codeBuffer = [];
+          };
+
+          lines.forEach((line) => {
+            if (/^```/.test(line)) {
+              if (inCodeBlock) {
+                flushCodeBlock();
+                inCodeBlock = false;
+              } else {
+                flushCodeBlock();
+                inCodeBlock = true;
+              }
+              return;
+            }
+
+            if (inCodeBlock) {
+              codeBuffer.push(line);
+              return;
+            }
+
+            if (!line.trim()) {
+              html.push("<div style='height: 0.7em'></div>");
+              return;
+            }
+
+            if (/^#{1,3}\s+/.test(line)) {
+              const level = line.match(/^#+/)[0].length;
+              const text = line.replace(/^#{1,3}\s+/, "");
+              html.push(`<h${level}>${renderInline(text)}</h${level}>`);
+              return;
+            }
+
+            if (/^> /.test(line)) {
+              html.push(`<blockquote>${renderInline(line.replace(/^>\s*/, ""))}</blockquote>`);
+              return;
+            }
+
+            if (/^[-*]\s+/.test(line)) {
+              html.push(`<ul><li>${renderInline(line.replace(/^[-*]\s+/, ""))}</li></ul>`);
+              return;
+            }
+
+            if (/^\d+\.\s+/.test(line)) {
+              html.push(`<ol><li>${renderInline(line.replace(/^\d+\.\s+/, ""))}</li></ol>`);
+              return;
+            }
+
+            html.push(`<p>${renderInline(line)}</p>`);
+          });
+
+          flushCodeBlock();
+          return html.join("");
+        }
+
+        function renderInline(text) {
+          let result = escapeHtml(text);
+          result = result.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img alt="$1" src="$2" style="max-width: 100%;" />');
+          result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color: var(--accent);">$1</a>');
+          result = result.replace(/`([^`]+)`/g, '<code style="background: rgba(56, 189, 248, 0.18); padding: 2px 4px; border-radius: 6px;">$1</code>');
+          result = result.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+          result = result.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+          return result;
+        }
+
+        function escapeHtml(value) {
+          return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;");
+        }
+
+        function insertAtCursor(textarea, text) {
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const before = textarea.value.slice(0, start);
+          const after = textarea.value.slice(end);
+          textarea.value = before + text + after;
+          const cursorPosition = start + text.length;
+          textarea.selectionStart = cursorPosition;
+          textarea.selectionEnd = cursorPosition;
+          textarea.focus();
+          renderPreview();
+        }
+
+        async function uploadAndInsertImages(files) {
+          if (!files.length) return;
+          if (!state.user) {
+            setStatus("editorStatus", "Сначала войдите в систему", "bad");
+            return;
+          }
+
+          try {
+            if (!state.currentPost) {
+              await savePost();
+            }
+
+            if (!state.currentPost) {
+              setStatus("editorStatus", "Ошибка при создании поста", "bad");
+              return;
             }
 
             const formData = new FormData();
-            formData.append('uploaded_files', file);
+            files.forEach((file) => formData.append("files", file));
+            const url = `/file/upload?item_uuid=${encodeURIComponent(state.currentPost.uuid)}`;
 
-            const placeholder = `![Загрузка ${file.name}...]()\n`;
-            insertAtCursor(contentInput, placeholder);
-
-            try {
-                // Передаем item_uuid в параметры запроса, так как FastAPI ожидает его там
-                const res = await fetch(`/file/upload?item_uuid=${currentPostUuid}`, {
-                    method: 'POST',
-                    body: formData,
-                    credentials: 'include'
-                });
-                const data = await res.json();
-                
-                if (res.ok && data.files && data.files.length > 0) {
-                    const fileUuid = data.files[0].uuid;
-                    const markdownImage = `![${data.files[0].filename}](/file/${fileUuid})\n`;
-                    contentInput.value = contentInput.value.replace(placeholder, markdownImage);
-                    contentInput.dispatchEvent(new Event('input')); // Обновляем превью и вызываем автосохранение
-                } else {
-                    alert('Ошибка загрузки файла');
-                    contentInput.value = contentInput.value.replace(placeholder, '');
-                }
-            } catch (err) {
-                console.error(err);
-                contentInput.value = contentInput.value.replace(placeholder, '');
-            }
+            const response = await request(url, { method: "POST", body: formData });
+            const insertText = response.files.map((file) => `![${file.filename}](${window.location.origin}/file/${file.uuid})`).join("\n");
+            insertAtCursor(document.getElementById("postContent"), `${insertText}\n`);
+            await savePost();
+            setStatus("editorStatus", "Картинки загружены", "good");
+          } catch (error) {
+            setStatus("editorStatus", error.message, "bad");
+          }
         }
 
-        // Вставка картинок
-        contentInput.addEventListener('paste', (e) => {
-            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-            for (let item of items) {
-                if (item.kind === 'file' && item.type.startsWith('image/')) {
-                    e.preventDefault();
-                    uploadImage(item.getAsFile());
-                }
+        async function createShareLink() {
+          if (!state.user) {
+            setStatus("editorStatus", "Сначала войдите в систему", "bad");
+            return;
+          }
+
+          try {
+            if (!state.currentPost) {
+              await savePost();
             }
-        });
 
-        contentInput.addEventListener('dragover', (e) => e.preventDefault());
-        contentInput.addEventListener('drop', (e) => {
-            e.preventDefault();
-            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                const file = e.dataTransfer.files[0];
-                if (file.type.startsWith('image/')) uploadImage(file);
+            if (!state.currentPost) {
+              setStatus("editorStatus", "Ошибка при создании поста", "bad");
+              return;
             }
-        });
 
-        // Шаг 4: Публикация
-        document.getElementById('postForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!currentPostUuid) return;
-
-            const resultDiv = document.getElementById('postResult');
-            resultDiv.innerText = 'Генерация ссылки...';
-
-            try {
-                const res = await fetch(`/post/create_link?item_uuid=${currentPostUuid}`, {
-                    method: 'POST',
-                    credentials: 'include'
-                });
-                
-                const data = await res.json();
-                
-                if (res.ok) {
-                    const link = `/p/h/${data.link_hash}`;
-                    resultDiv.innerHTML = `🎉 Пост опубликован! <a href="${link}" target="_blank" style="color: #58a6ff;">Открыть пост</a>`;
-                    saveStatus.innerText = 'Готово';
-                    saveStatus.style.color = '#58a6ff';
-                } else {
-                    resultDiv.innerText = 'Ошибка: ' + (data.detail || JSON.stringify(data));
-                }
-            } catch (err) {
-                resultDiv.innerText = 'Ошибка сети: ' + err.message;
+            const data = await request(`/post/create_link?item_uuid=${state.currentPost.uuid}`, { method: "POST" });
+            const link = `${window.location.origin}/p/h/${data.link_hash}`;
+            document.getElementById("shareLink").textContent = link;
+            if (navigator.clipboard) {
+              await navigator.clipboard.writeText(link);
             }
-        });
+            setStatus("editorStatus", "Ссылка создана", "good");
+          } catch (error) {
+            setStatus("editorStatus", error.message, "bad");
+          }
+        }
+
+        function confirmDelete() {
+          if (!state.currentPost) return;
+          if (confirm("Вы уверены, что хотите удалить этот пост? Это действие необратимо.")) {
+            deletePost();
+          }
+        }
+
+        async function deletePost() {
+          if (!state.currentPost) {
+            setStatus("editorStatus", "Нет выбранного поста", "bad");
+            return;
+          }
+
+          try {
+            await request(`/post/delete?item_uuid=${state.currentPost.uuid}`, { method: "POST" });
+            setStatus("editorStatus", "Пост удалён", "good");
+            state.currentPost = null;
+            await loadPosts();
+            setTimeout(() => goToDashboard(), 1000);
+          } catch (error) {
+            setStatus("editorStatus", error.message, "bad");
+          }
+        }
+
+        function logout() {
+          document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+          state.user = null;
+          state.currentPost = null;
+          state.posts = [];
+          goToPage("auth");
+        }
+
+        function init() {
+          showAuthForms();
+
+          const postTitle = document.getElementById("postTitle");
+          const postContent = document.getElementById("postContent");
+          const postGlobal = document.getElementById("postGlobal");
+
+          postTitle.addEventListener("input", () => {
+            renderPreview();
+            scheduleSave();
+          });
+
+          postContent.addEventListener("input", () => {
+            renderPreview();
+            scheduleSave();
+          });
+
+          postGlobal.addEventListener("change", scheduleSave);
+
+          postContent.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "copy";
+          });
+
+          postContent.addEventListener("drop", (event) => {
+            event.preventDefault();
+            const files = Array.from(event.dataTransfer?.files || []);
+            if (files.some((file) => file.type.startsWith("image/"))) {
+              uploadAndInsertImages(files.filter((file) => file.type.startsWith("image/")));
+            }
+          });
+
+          document.getElementById("imageInput").addEventListener("change", (event) => {
+            uploadAndInsertImages(Array.from(event.target.files || []));
+          });
+
+          if (getCookie("access_token")) {
+            loadUserProfile();
+            loadPosts();
+            goToPage("dashboard");
+          }
+        }
+
+        init();
+
+        return {
+          toggleAuthMode,
+          handleLogin,
+          handleRegister,
+          logout,
+          goToEditor,
+          goToDashboard,
+          backToDashboard,
+          editPost,
+          createShareLink,
+          confirmDelete,
+        };
+      })();
     </script>
-</body>
+  </body>
 </html>

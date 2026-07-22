@@ -7,7 +7,6 @@ from core.db.uow import UnitOfWork, get_uow
 
 from database.schemas.users import UserCreateSchema, UserLoginSchema
 from services.user.auth import UserAuthService
-from presentation.api.dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -25,7 +24,7 @@ async def register_user(
 @router.post("/login")
 async def login(
     login_data: UserLoginSchema, 
-    response: Response, # Добавляем response сюда
+    response: Response,
     uow: UnitOfWork = Depends(get_uow)
 ):
     auth_service = UserAuthService(uow)
@@ -34,10 +33,8 @@ async def login(
     if not user:
         raise HTTPException(status_code=401, detail="Неверный email или пароль")
     
-    # Генерируем токен
     token = utils.create_access_token({"sub": str(user.id)}, expires_delta=timedelta(minutes=15))
     
-    # Записываем токен в куки
     response.set_cookie(
         key="access_token",
         value=f"Bearer {token}",
